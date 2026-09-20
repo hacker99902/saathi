@@ -189,11 +189,11 @@ async function boot() {
 
   const token = localStorage.getItem(TK);
 
+  // No token → go directly to login
   if (!token) {
     location.replace('login.html');
     return;
   }
-
 
   try {
 
@@ -204,12 +204,11 @@ async function boot() {
       }
     );
 
-
+    // Invalid/expired token
     if (!r.ok) {
       signOut();
       return;
     }
-
 
     const d = await r.json();
 
@@ -218,11 +217,19 @@ async function boot() {
       JSON.stringify(d.user)
     );
 
-  } catch {
+    // Authentication successful → reveal app
+    document.body.classList.remove('auth-pending');
+    document.body.classList.add('auth-ready');
 
+  } catch (e) {
+
+    console.error('Authentication check failed:', e);
+
+    // Keep the app hidden while authentication is uncertain
     showBanner();
-  }
 
+    return;
+  }
 
   applyTheme(S.theme);
   renderUserBadge();
@@ -233,8 +240,6 @@ async function boot() {
 
   showUI();
 }
-
-
 /* ══════════════════════════════════════════════════
    THEME
    ══════════════════════════════════════════════════ */

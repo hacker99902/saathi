@@ -16,6 +16,15 @@
     }
   }
   </script>
+  <style>
+    body.auth-pending {
+      visibility: hidden;
+    }
+
+    body.auth-ready {
+      visibility: visible;
+    }
+  </style>
 
   <link rel="stylesheet" href="style.css" />
   <style>
@@ -103,7 +112,7 @@
 
 </head>
 
-<body>
+<body class="auth-pending">
   <div id="app">
 
     <!-- ── SIDEBAR ─────────────────────────────────────────── -->
