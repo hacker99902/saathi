@@ -3102,49 +3102,94 @@ function sync3DWithSpeaker(segment) {
   const speaker = String(segment.speaker || '').toLowerCase();
   const text = String(segment.text || '').toLowerCase();
 
-  // Maya is speaking
-  if (speaker === 'maya') {
-    let gesture = 'talking';
+  // =====================================================
+  // MAYA
+  // =====================================================
 
-    // Use pointing for important explanations
+  if (speaker === 'maya') {
+
+    let gesture;
+
+    /*
+     * Certain sentences get specific gestures.
+     */
     if (
       text.includes('important') ||
       text.includes('remember') ||
       text.includes('key point') ||
-      text.includes('for example') ||
-      text.includes('means that')
+      text.includes('the main idea') ||
+      text.includes('for example')
     ) {
+
       gesture = 'pointing';
+
     }
 
-    // Use thinking for conceptual questions
+    /*
+     * Conceptual explanations.
+     */
     else if (
       text.includes('think about') ||
       text.includes('consider') ||
+      text.includes('imagine') ||
       text.includes('why')
     ) {
+
       gesture = 'thinking';
+
     }
 
-    // Alternate Maya's talking animations
+    /*
+     * For normal teaching, rotate through
+     * different Maya animations.
+     */
     else {
-      gesture = S.podIdx % 2 === 0
-        ? 'talking'
-        : 'talking2';
+
+      const cycle =
+        S.podIdx % 4;
+
+      if (cycle === 0) {
+        gesture = 'talking';
+      }
+
+      else if (cycle === 1) {
+        gesture = 'talking2';
+      }
+
+      else if (cycle === 2) {
+        gesture = 'pointing';
+      }
+
+      else {
+        gesture = 'talking2';
+      }
     }
+
 
     window.saathi3D.setSpeaker('Maya');
+
     window.saathi3D.mayaGesture(gesture);
   }
 
-  // Alex is speaking
+
+  // =====================================================
+  // ALEX
+  // =====================================================
+
   else if (speaker === 'alex') {
+
     window.saathi3D.setSpeaker('Alex');
+
     window.saathi3D.alexTalking();
   }
 
-  // Nobody is speaking
+
+  // =====================================================
+  // NO SPEAKER
+  // =====================================================
+
   else {
+
     window.saathi3D.setSpeaker('');
   }
 }
