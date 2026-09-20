@@ -34,6 +34,9 @@ const S = {
   podRate: 1,
 
   summaryType: 'short',
+
+  mayaGestureTimer: null,
+  mayaGestureStep: 0,
 };
 
 
@@ -3097,101 +3100,195 @@ function speakSentence(
 }
 
 function sync3DWithSpeaker(segment) {
-  if (!window.saathi3D || !segment) return;
 
-  const speaker = String(segment.speaker || '').toLowerCase();
-  const text = String(segment.text || '').toLowerCase();
+  if (!window.saathi3D || !segment) {
+    return;
+  }
 
-  // =====================================================
+  const speaker =
+    String(segment.speaker || '')
+      .toLowerCase();
+
+  const text =
+    String(segment.text || '')
+      .toLowerCase();
+
+
+  // ==========================================
   // MAYA
-  // =====================================================
+  // ==========================================
 
   if (speaker === 'maya') {
 
-    let gesture;
+    /*
+     * Start automatic body-language changes
+     * for the whole Maya answer.
+     */
+    startMayaGestureCycle();
 
     /*
-     * Certain sentences get specific gestures.
+     * Use the actual content to choose the
+     * first gesture.
      */
+
     if (
       text.includes('important') ||
       text.includes('remember') ||
       text.includes('key point') ||
-      text.includes('the main idea') ||
-      text.includes('for example')
+      text.includes('main idea')
     ) {
 
-      gesture = 'pointing';
+      window.saathi3D.mayaGesture(
+        'pointing'
+      );
 
+      return;
     }
 
-    /*
-     * Conceptual explanations.
-     */
-    else if (
+
+    if (
       text.includes('think about') ||
       text.includes('consider') ||
       text.includes('imagine') ||
       text.includes('why')
     ) {
 
-      gesture = 'thinking';
+      window.saathi3D.mayaGesture(
+        'thinking'
+      );
 
+      return;
     }
+
 
     /*
-     * For normal teaching, rotate through
-     * different Maya animations.
+     * Otherwise begin naturally with talking.
      */
-    else {
+    window.saathi3D.mayaGesture(
+      'talking'
+    );
 
-      const cycle =
-        S.podIdx % 4;
-
-      if (cycle === 0) {
-        gesture = 'talking';
-      }
-
-      else if (cycle === 1) {
-        gesture = 'talking2';
-      }
-
-      else if (cycle === 2) {
-        gesture = 'pointing';
-      }
-
-      else {
-        gesture = 'talking2';
-      }
-    }
-
-
-    window.saathi3D.setSpeaker('Maya');
-
-    window.saathi3D.mayaGesture(gesture);
+    return;
   }
 
 
-  // =====================================================
+  // ==========================================
   // ALEX
-  // =====================================================
+  // ==========================================
 
-  else if (speaker === 'alex') {
+  if (speaker === 'alex') {
 
-    window.saathi3D.setSpeaker('Alex');
+    /*
+     * Maya has finished her answer.
+     */
+    stopMayaGestureCycle();
 
     window.saathi3D.alexTalking();
+
+    return;
   }
 
 
-  // =====================================================
+  // ==========================================
   // NO SPEAKER
-  // =====================================================
+  // ==========================================
 
-  else {
+  stopMayaGestureCycle();
 
-    window.saathi3D.setSpeaker('');
+  window.saathi3D.setSpeaker('');
+}
+function startMayaGestureCycle() {
+  if (!window.saathi3D) return;
+
+  // Stop any previous cycle
+  if (S.mayaGestureTimer) {
+    clearInterval(S.mayaGestureTimer);
+    S.mayaGestureTimer = null;
   }
+
+  const gestures = [
+    'talking',
+    'talking2',
+    'pointing',
+    'talking2',
+    'thinking',
+    'talking',
+    'pointing',
+    'talking2'
+  ];
+
+  S.mayaGestureStep = 0;
+
+  // Start immediately
+  window.saathi3D.mayaGesture(
+    gestures[S.mayaGestureStep]
+  );
+
+  /*
+   * Change Maya's body language every few seconds.
+   *
+   * This makes a single long answer feel
+   * like a real teaching conversation.
+   */
+  const gestureDelays = [
+    7000,
+    8500,
+    6500,
+    9000,
+    7500,
+    8500
+  ];
+
+  let delayIndex = 0;
+
+  function scheduleNextMayaGesture() {
+
+    if (!S.podPlaying) {
+      return;
+    }
+
+    const delay =
+      gestureDelays[
+      delayIndex % gestureDelays.length
+      ];
+
+    delayIndex++;
+
+    S.mayaGestureTimer = setTimeout(() => {
+
+      if (
+        !S.podPlaying ||
+        S.podPaused
+      ) {
+        scheduleNextMayaGesture();
+        return;
+      }
+
+      S.mayaGestureStep =
+        (S.mayaGestureStep + 1) %
+        gestures.length;
+
+      window.saathi3D.mayaGesture(
+        gestures[S.mayaGestureStep]
+      );
+
+      scheduleNextMayaGesture();
+
+    }, delay);
+  }
+
+  scheduleNextMayaGesture();
+}
+
+
+function stopMayaGestureCycle() {
+
+  if (S.mayaGestureTimer) {
+    clearTimeout(S.mayaGestureTimer);
+    S.mayaGestureTimer = null;
+  }
+
+  S.mayaGestureStep = 0;
 }
 /*
  * Play one complete dialogue segment.
@@ -3532,113 +3629,113 @@ function updatePlayUI() {
  *
  * Unlike pause, this resets playback.
  */
-function stopPod() { 
- 
-  S.podPlaying = 
-    false; 
- 
- 
-  S.podPaused = 
-    false; 
- 
- 
-  speechSynthesis.cancel(); 
- 
- 
-  S.podIdx = 
-    0; 
- 
- 
-  updatePlayUI(); 
- 
- 
-  const fill = 
-    $('prog-fill'); 
- 
- 
-  if (fill) { 
- 
-    fill.style.width = 
-      '0%'; 
- 
-  } 
- 
- 
-  const current = 
-    $('t-cur'); 
- 
- 
-  if (current) { 
- 
-    current.textContent = 
-      '0:00'; 
- 
-  } 
- 
- 
-  const line = 
-    $('sp-line'); 
- 
- 
-  if (line) { 
- 
-    line.textContent = 
-      ''; 
- 
-  } 
- 
- 
-  const speaker = 
-    $('sp-name'); 
- 
- 
-  if (speaker) { 
- 
-    speaker.textContent = 
-      ''; 
- 
-  } 
- 
- 
-  const maya = 
-    $('maya-avatar'); 
- 
-  const alex = 
-    $('alex-avatar'); 
- 
-  if (maya) { 
- 
-    maya.classList.remove( 
-      'active', 
-      'speaking' 
-    ); 
- 
-  } 
- 
- 
-  if (alex) { 
- 
-    alex.classList.remove( 
-      'active', 
-      'speaking' 
-    ); 
- 
-  } 
- 
- 
-  $$('.pod-segment') 
-    .forEach( 
-      el => 
-        el.classList.remove( 
-          'active' 
-        ) 
+function stopPod() {
+
+  S.podPlaying =
+    false;
+
+
+  S.podPaused =
+    false;
+
+
+  speechSynthesis.cancel();
+
+
+  S.podIdx =
+    0;
+
+
+  updatePlayUI();
+
+
+  const fill =
+    $('prog-fill');
+
+
+  if (fill) {
+
+    fill.style.width =
+      '0%';
+
+  }
+
+
+  const current =
+    $('t-cur');
+
+
+  if (current) {
+
+    current.textContent =
+      '0:00';
+
+  }
+
+
+  const line =
+    $('sp-line');
+
+
+  if (line) {
+
+    line.textContent =
+      '';
+
+  }
+
+
+  const speaker =
+    $('sp-name');
+
+
+  if (speaker) {
+
+    speaker.textContent =
+      '';
+
+  }
+
+
+  const maya =
+    $('maya-avatar');
+
+  const alex =
+    $('alex-avatar');
+
+  if (maya) {
+
+    maya.classList.remove(
+      'active',
+      'speaking'
+    );
+
+  }
+
+
+  if (alex) {
+
+    alex.classList.remove(
+      'active',
+      'speaking'
+    );
+
+  }
+
+
+  $$('.pod-segment')
+    .forEach(
+      el =>
+        el.classList.remove(
+          'active'
+        )
     );
 
   // Reset 3D characters
   if (window.saathi3D) {
     window.saathi3D.setSpeaker('');
   }
-
+  stopMayaGestureCycle();
 }
 
 /*

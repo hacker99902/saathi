@@ -70,16 +70,18 @@ app.use((err, req, res, next) => {
 });
 
 // ── Start + rehydrate ──────────────────────────────────────────
-app.listen(PORT, async () => {
-  console.log(`\n🚀 Saathi AI v2 running → http://localhost:${PORT}`);
-  console.log(`🔑 Groq API Key: ${process.env.GROQ_API_KEY ? 'SET ✅' : 'MISSING ❌ — add to .env'}`);
-  console.log(`🔐 JWT Secret:   ${process.env.JWT_SECRET   ? 'SET ✅' : 'using default ⚠️'}`);
+app.listen(PORT, '0.0.0.0', async () => {
+  console.log(`\n🚀 Saathi AI v2 running → port ${PORT}`);
+  console.log(`🔑 Groq API Key: ${process.env.GROQ_API_KEY ? 'SET ✅' : 'MISSING ❌ — add to environment variables'}`);
+  console.log(`🔐 JWT Secret:   ${process.env.JWT_SECRET ? 'SET ✅' : 'using default ⚠️'}`);
   console.log(`📁 Uploads:      ${UPLOADS}\n`);
 
   // Rehydrate vector store from disk on restart
   const { rehydrate } = require('./services/docService');
   const docs = require('./utils/store').getAllDocs();
-  if (docs.length > 0) await rehydrate(docs);
-});
 
+  if (docs.length > 0) {
+    await rehydrate(docs);
+  }
+});
 module.exports = app;

@@ -1554,6 +1554,7 @@ body {
 }
 /* White divider between Maya and Alex */
 .podcast-3d-container::before {
+  display: none !important;
     content: "";
     position: absolute;
 
@@ -1563,7 +1564,7 @@ body {
     left: 50%;
     transform: translateX(-50%);
 
-    width: 4px;
+    width: 2px;
 
     background: #ffffff;
 
@@ -1571,6 +1572,7 @@ body {
 
     pointer-events: none;
 }
+
 .podcast-3d-container canvas {
     display: block;
 
