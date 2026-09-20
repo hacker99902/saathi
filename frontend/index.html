@@ -1,302 +1,1879 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Saathi AI — Document Intelligence</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="style.css"/>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .podcast-3d-container {
+      width: 100%;
+      height: 520px;
+      min-height: 520px;
+      position: relative;
+      overflow: hidden;
+
+      background: #111;
+
+      border: 4px solid #ffffff;
+      border-radius: 20px;
+
+      box-sizing: border-box;
+    }
+
+    #podcast-3d-scene {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #podcast-3d-scene canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .podcast-3d-status {
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
+      z-index: 5;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, .62);
+      color: #fff;
+      font-size: 12px;
+      pointer-events: none;
+    }
+
+    .podcast-3d-speaker {
+      position: absolute;
+      bottom: 18px;
+      padding: 7px 13px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, .62);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .25s ease;
+    }
+
+    .podcast-3d-speaker.maya {
+      left: 25%;
+    }
+
+    .podcast-3d-speaker.alex {
+      right: 25%;
+    }
+
+    .podcast-3d-active .avatar-stage {
+      display: none;
+    }
+
+    @media (max-width: 800px) {
+      .podcast-3d-container {
+        height: 420px;
+      }
+
+      .podcast-3d-speaker.maya {
+        left: 20%;
+      }
+
+      .podcast-3d-speaker.alex {
+        right: 20%;
+      }
+    }
+  </style>
+
 </head>
+
 <body>
-<div id="app">
+  <div id="app">
 
-  <!-- ── SIDEBAR ─────────────────────────────────────────── -->
-  <aside id="sidebar">
-    <div class="sb-header">
-      <div class="brand">
-        <div class="brand-logo">
-          <svg viewBox="0 0 20 20" fill="none"><path d="M4 6h12M4 10h8M4 14h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
-        </div>
-        <span class="brand-name">Saathi</span>
-      </div>
-      <button id="theme-btn" class="icon-btn" title="Toggle theme">🌙</button>
-    </div>
-
-    <div class="upload-area" id="drop-area">
-      <input type="file" id="file-input" multiple accept=".pdf,.txt,.md" hidden/>
-      <div class="upload-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M16 8l-4-4-4 4M12 4v12"/></svg>
-      </div>
-      <p class="upload-label">Drop files here</p>
-      <p class="upload-sub">PDF · TXT · MD (max 50MB)</p>
-      <button class="btn-upload" id="browse-btn">Browse Files</button>
-    </div>
-
-    <div class="multi-bar" id="multi-bar" style="display:none">
-      <span id="sel-count">0 selected</span>
-      <button class="btn-multi" id="multi-btn">⚡ Chat Together</button>
-    </div>
-
-    <div class="doc-list-header">
-      <span>DOCUMENTS</span>
-      <span class="doc-badge" id="doc-count">0</span>
-    </div>
-
-    <div class="doc-list" id="doc-list">
-      <div class="doc-empty" id="doc-empty">
-        <div style="font-size:32px;margin-bottom:8px">📂</div>
-        <p>No documents yet</p>
-        <p style="font-size:11px;margin-top:4px;color:var(--text-muted)">Upload files to get started</p>
-      </div>
-    </div>
-
-    <div class="sb-footer">
-      <button class="btn-compare" id="compare-btn" style="display:none">📊 Compare Selected</button>
-      <div class="user-badge" id="user-badge"></div>
-    </div>
-  </aside>
-
-  <!-- ── MAIN ────────────────────────────────────────────── -->
-  <main id="main">
-
-    <!-- Welcome -->
-    <div id="welcome" class="welcome">
-      <div class="welcome-inner">
-        <div class="welcome-logo">
-          <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="url(#wg)"/><path d="M14 18h20M14 24h14M14 30h17" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><defs><linearGradient id="wg" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient></defs></svg>
-        </div>
-        <h1 class="welcome-title">Welcome to <span class="grad-text">Saathi</span></h1>
-        <p class="welcome-sub">Your AI-powered document intelligence platform</p>
-        <div class="welcome-grid">
-          <div class="wf-card"><span>💬</span><span>Chat with Citations</span></div>
-          <div class="wf-card"><span>📝</span><span>Smart Summaries</span></div>
-          <div class="wf-card"><span>🃏</span><span>Flashcards</span></div>
-          <div class="wf-card"><span>🎙️</span><span>Podcast Mode</span></div>
-          <div class="wf-card"><span>🎓</span><span>Exam Mode</span></div>
-          <div class="wf-card"><span>📊</span><span>Compare Docs</span></div>
-        </div>
-        <button class="btn-primary" id="start-btn">Upload a Document →</button>
-      </div>
-    </div>
-
-    <!-- Workspace -->
-    <div id="workspace" style="display:none" class="workspace">
-
-      <!-- Top bar -->
-      <div class="ws-header">
-        <div class="ws-doc-info">
-          <span class="ws-doc-icon">📄</span>
-          <div>
-            <h2 class="ws-doc-name" id="ws-name">Document</h2>
-            <span class="ws-doc-meta" id="ws-meta">0 pages · 0 chunks</span>
+    <!-- ── SIDEBAR ─────────────────────────────────────────── -->
+    <aside id="sidebar">
+      <div class="sb-header">
+        <div class="brand">
+          <div class="brand-logo">
+            <svg viewBox="0 0 20 20" fill="none">
+              <path d="M4 6h12M4 10h8M4 14h10" stroke="#fff" stroke-width="2" stroke-linecap="round" />
+            </svg>
           </div>
+          <span class="brand-name">Saathi</span>
         </div>
+        <button id="theme-btn" class="icon-btn" title="Toggle theme">🌙</button>
+      </div>
 
-        <nav class="tab-nav">
-          <button class="tab active" data-tab="chat">💬 Chat</button>
-          <button class="tab" data-tab="summary">📝 Summary</button>
-          <button class="tab" data-tab="flashcards">🃏 Flashcards</button>
-          <button class="tab" data-tab="podcast">🎙️ Podcast</button>
-          <button class="tab" data-tab="exam">🎓 Exam</button>
-        </nav>
+      <div class="upload-area" id="drop-area">
+        <input type="file" id="file-input" multiple accept=".pdf,.txt,.md" hidden />
+        <div class="upload-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M16 8l-4-4-4 4M12 4v12" />
+          </svg>
+        </div>
+        <p class="upload-label">Drop files here</p>
+        <p class="upload-sub">PDF · TXT · MD (max 50MB)</p>
+        <button class="btn-upload" id="browse-btn">Browse Files</button>
+      </div>
 
-        <div class="ws-actions">
-          <button class="icon-btn" id="clear-btn" title="Clear chat">🗑️</button>
-          <button class="icon-btn" id="dl-btn" title="Download">⬇️</button>
+      <div class="multi-bar" id="multi-bar" style="display:none">
+        <span id="sel-count">0 selected</span>
+        <button class="btn-multi" id="multi-btn">⚡ Chat Together</button>
+      </div>
+
+      <div class="doc-list-header">
+        <span>DOCUMENTS</span>
+        <span class="doc-badge" id="doc-count">0</span>
+      </div>
+
+      <div class="doc-list" id="doc-list">
+        <div class="doc-empty" id="doc-empty">
+          <div style="font-size:32px;margin-bottom:8px">📂</div>
+          <p>No documents yet</p>
+          <p style="font-size:11px;margin-top:4px;color:var(--text-muted)">Upload files to get started</p>
         </div>
       </div>
 
-      <!-- ── CHAT TAB ──────────────────────────────────── -->
-      <div class="tab-panel active" id="tab-chat">
-        <div class="chat-wrap">
-          <div class="chat-msgs" id="chat-msgs">
-            <div class="chat-welcome" id="chat-welcome">
-              <div class="cw-icon">🤖</div>
-              <p id="cw-text">Ask me anything about your document</p>
-              <div class="suggestions" id="suggestions">
-                <button class="chip">📋 What is this document about?</button>
-                <button class="chip">🔑 List the key points</button>
-                <button class="chip">💡 What are the main conclusions?</button>
-                <button class="chip">❓ Explain the most important concept</button>
-              </div>
+      <div class="sb-footer">
+        <button class="btn-compare" id="compare-btn" style="display:none">📊 Compare Selected</button>
+        <div class="user-badge" id="user-badge"></div>
+      </div>
+    </aside>
+
+    <!-- ── MAIN ────────────────────────────────────────────── -->
+    <main id="main">
+
+      <!-- Welcome -->
+      <div id="welcome" class="welcome">
+        <div class="welcome-inner">
+          <div class="welcome-logo">
+            <svg viewBox="0 0 48 48" fill="none">
+              <circle cx="24" cy="24" r="22" fill="url(#wg)" />
+              <path d="M14 18h20M14 24h14M14 30h17" stroke="#fff" stroke-width="2.5" stroke-linecap="round" />
+              <defs>
+                <linearGradient id="wg" x1="0" y1="0" x2="48" y2="48">
+                  <stop offset="0%" stop-color="#6366f1" />
+                  <stop offset="100%" stop-color="#8b5cf6" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <h1 class="welcome-title">Welcome to <span class="grad-text">Saathi</span></h1>
+          <p class="welcome-sub">Your AI-powered document intelligence platform</p>
+          <div class="welcome-grid">
+            <div class="wf-card"><span>💬</span><span>Chat with Citations</span></div>
+            <div class="wf-card"><span>📝</span><span>Smart Summaries</span></div>
+            <div class="wf-card"><span>🃏</span><span>Flashcards</span></div>
+            <div class="wf-card"><span>🎙️</span><span>Teach Me Mode</span></div>
+            <div class="wf-card"><span>🎓</span><span>Exam Mode</span></div>
+            <div class="wf-card"><span>📊</span><span>Compare Docs</span></div>
+          </div>
+          <button class="btn-primary" id="start-btn">Upload a Document →</button>
+        </div>
+      </div>
+
+      <!-- Workspace -->
+      <div id="workspace" style="display:none" class="workspace">
+
+        <!-- Top bar -->
+        <div class="ws-header">
+          <div class="ws-doc-info">
+            <span class="ws-doc-icon">📄</span>
+            <div>
+              <h2 class="ws-doc-name" id="ws-name">Document</h2>
+              <span class="ws-doc-meta" id="ws-meta">0 pages · 0 chunks</span>
             </div>
           </div>
-          <div class="chat-input-area">
-            <div class="chat-input-wrap">
-              <textarea id="chat-input" placeholder="Ask anything about your document..." rows="1"></textarea>
-              <button id="send-btn" class="btn-send">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
-              </button>
-            </div>
-            <div class="chat-hint">
-              <span>Enter to send · Shift+Enter for new line</span>
-              <span id="active-indicator" style="color:var(--accent);font-weight:600"></span>
-            </div>
+
+          <nav class="tab-nav">
+            <button class="tab active" data-tab="chat">💬 Chat</button>
+            <button class="tab" data-tab="summary">📝 Summary</button>
+            <button class="tab" data-tab="flashcards">🃏 Flashcards</button>
+            <button class="tab" data-tab="podcast">🎙️ Teach Me</button>
+            <button class="tab" data-tab="exam">🎓 Exam</button>
+          </nav>
+
+          <div class="ws-actions">
+            <button class="icon-btn" id="clear-btn" title="Clear chat">🗑️</button>
+            <button class="icon-btn" id="dl-btn" title="Download">⬇️</button>
           </div>
         </div>
-      </div>
 
-      <!-- ── SUMMARY TAB ──────────────────────────────── -->
-      <div class="tab-panel" id="tab-summary">
-        <div class="panel-body">
-          <div class="panel-header">
-            <h3>Smart Summary</h3>
-            <p>AI-powered summaries in three formats</p>
-          </div>
-          <div class="type-selector">
-            <button class="type-btn active" data-type="short">⚡ Short</button>
-            <button class="type-btn" data-type="detailed">📖 Detailed</button>
-            <button class="type-btn" data-type="bullets">📌 Bullet Points</button>
-          </div>
-          <button class="btn-primary btn-gen" id="gen-summary-btn">✨ Generate Summary</button>
-          <div class="output-box" id="summary-out">
-            <div class="placeholder">📝<br/>Click Generate to create a summary</div>
-          </div>
-          <div id="compare-section" style="display:none">
-            <div class="divider-label">or</div>
-            <button class="btn-secondary btn-gen" id="compare-btn2">📊 Compare Selected Documents</button>
-            <div class="output-box" id="compare-out"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── FLASHCARDS TAB ───────────────────────────── -->
-      <div class="tab-panel" id="tab-flashcards">
-        <div class="panel-body">
-          <div class="panel-header">
-            <h3>Flashcard Generator</h3>
-            <p>Auto-generate study cards from your document</p>
-          </div>
-          <div class="fc-controls">
-            <div class="count-ctrl">
-              <span>Cards:</span>
-              <div class="counter">
-                <button id="fc-minus">−</button>
-                <span id="fc-count">10</span>
-                <button id="fc-plus">+</button>
-              </div>
-            </div>
-            <button class="btn-primary btn-gen" id="gen-fc-btn">🃏 Generate Flashcards</button>
-          </div>
-          <div class="fc-stats" id="fc-stats" style="display:none">
-            <span id="fc-total">0 cards</span>
-            <span>·</span>
-            <span id="fc-done">0 reviewed</span>
-            <button class="btn-sm" id="shuffle-btn">🔀 Shuffle</button>
-            <button class="btn-sm" id="dl-fc-btn">⬇️ Export</button>
-          </div>
-          <div class="diff-filter" id="diff-filter" style="display:none">
-            <button class="diff-btn active" data-diff="all">All</button>
-            <button class="diff-btn" data-diff="easy">🟢 Easy</button>
-            <button class="diff-btn" data-diff="medium">🟡 Medium</button>
-            <button class="diff-btn" data-diff="hard">🔴 Hard</button>
-          </div>
-          <div id="fc-area">
-            <div class="placeholder">🃏<br/>Generate flashcards to start studying</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── PODCAST TAB ──────────────────────────────── -->
-      <div class="tab-panel" id="tab-podcast">
-        <div class="panel-body">
-          <div class="panel-header">
-            <h3>Podcast Mode 🎙️</h3>
-            <p>Convert your document into an audio conversation</p>
-          </div>
-          <button class="btn-primary btn-gen" id="gen-pod-btn">🎙️ Generate Podcast Script</button>
-          <div id="player" style="display:none" class="player">
-            <div class="player-top">
-              <div class="player-info">
-                <div class="disc" id="disc">🎵</div>
-                <div>
-                  <p class="player-title" id="player-title">Document Podcast</p>
-                  <p class="player-dur" id="player-dur">~0 min</p>
+        <!-- ── CHAT TAB ──────────────────────────────────── -->
+        <div class="tab-panel active" id="tab-chat">
+          <div class="chat-wrap">
+            <div class="chat-msgs" id="chat-msgs">
+              <div class="chat-welcome" id="chat-welcome">
+                <div class="cw-icon">🤖</div>
+                <p id="cw-text">Ask me anything about your document</p>
+                <div class="suggestions" id="suggestions">
+                  <button class="chip">📋 What is this document about?</button>
+                  <button class="chip">🔑 List the key points</button>
+                  <button class="chip">💡 What are the main conclusions?</button>
+                  <button class="chip">❓ Explain the most important concept</button>
                 </div>
               </div>
-              <div class="player-btns">
-                <button class="pl-btn" id="restart-btn">⏮</button>
-                <button class="pl-btn pl-play" id="play-btn">▶️</button>
-                <button class="pl-btn" id="stop-btn">⏹</button>
+            </div>
+            <div class="chat-input-area">
+              <div class="chat-input-wrap">
+                <textarea id="chat-input" placeholder="Ask anything about your document..." rows="1"></textarea>
+                <button id="send-btn" class="btn-send">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" />
+                  </svg>
+                </button>
+              </div>
+              <div class="chat-hint">
+                <span>Enter to send · Shift+Enter for new line</span>
+                <span id="active-indicator" style="color:var(--accent);font-weight:600"></span>
               </div>
             </div>
-            <div class="speaker-bar" id="speaker-bar">
-              <div class="sp-avatar" id="sp-avatar">A</div>
-              <div class="sp-text">
-                <span class="sp-name" id="sp-name">Alex</span>
-                <span class="sp-line" id="sp-line"></span>
-              </div>
-              <div class="sound-waves" id="waves"><span></span><span></span><span></span></div>
-            </div>
-            <div class="progress-wrap">
-              <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
-              <div class="prog-times"><span id="t-cur">0:00</span><span id="t-tot">0:00</span></div>
-            </div>
-            <div class="speed-row">
-              Speed:
-              <button class="sp-btn active" data-speed="1">1×</button>
-              <button class="sp-btn" data-speed="1.25">1.25×</button>
-              <button class="sp-btn" data-speed="1.5">1.5×</button>
-              <button class="sp-btn" data-speed="2">2×</button>
-            </div>
-          </div>
-          <div id="transcript" style="display:none" class="transcript">
-            <div class="transcript-header">
-              <h4>Transcript</h4>
-              <button class="btn-sm" id="dl-script-btn">⬇️ Download</button>
-            </div>
-            <div id="transcript-body" class="transcript-body"></div>
           </div>
         </div>
-      </div>
 
-      <!-- ── EXAM TAB ─────────────────────────────────── -->
-      <div class="tab-panel" id="tab-exam">
-        <div class="panel-body">
-          <div class="panel-header">
-            <h3>Exam Mode 🎓</h3>
-            <p>Test your knowledge with AI-generated questions</p>
-          </div>
-          <div class="fc-controls">
-            <div class="count-ctrl">
-              <span>Questions:</span>
-              <div class="counter">
-                <button id="ex-minus">−</button>
-                <span id="ex-count">5</span>
-                <button id="ex-plus">+</button>
-              </div>
+        <!-- ── SUMMARY TAB ──────────────────────────────── -->
+        <div class="tab-panel" id="tab-summary">
+          <div class="panel-body">
+            <div class="panel-header">
+              <h3>Smart Summary</h3>
+              <p>AI-powered summaries in three formats</p>
             </div>
-            <button class="btn-primary btn-gen" id="gen-exam-btn">🎓 Start Exam</button>
-          </div>
-          <div class="score-bar" id="score-bar" style="display:none">
-            <div class="score-item"><span class="score-num" id="sc-correct">0</span><span class="score-lbl">Correct</span></div>
-            <div class="score-sep"></div>
-            <div class="score-item"><span class="score-num" id="sc-total">0</span><span class="score-lbl">Total</span></div>
-            <div class="score-sep"></div>
-            <div class="score-item"><span class="score-num" id="sc-pct">—</span><span class="score-lbl">Score</span></div>
-          </div>
-          <div id="exam-area">
-            <div class="placeholder">🎓<br/>Start an exam to test your knowledge</div>
+            <div class="type-selector">
+              <button class="type-btn active" data-type="short">⚡ Short</button>
+              <button class="type-btn" data-type="detailed">📖 Detailed</button>
+              <button class="type-btn" data-type="bullets">📌 Bullet Points</button>
+            </div>
+            <button class="btn-primary btn-gen" id="gen-summary-btn">✨ Generate Summary</button>
+            <div class="output-box" id="summary-out">
+              <div class="placeholder">📝<br />Click Generate to create a summary</div>
+            </div>
+            <div id="compare-section" style="display:none">
+              <div class="divider-label">or</div>
+              <button class="btn-secondary btn-gen" id="compare-btn2">📊 Compare Selected Documents</button>
+              <div class="output-box" id="compare-out"></div>
+            </div>
           </div>
         </div>
-      </div>
 
-    </div><!-- /workspace -->
-  </main>
-</div><!-- /app -->
+        <!-- ── FLASHCARDS TAB ───────────────────────────── -->
+        <div class="tab-panel" id="tab-flashcards">
+          <div class="panel-body">
+            <div class="panel-header">
+              <h3>Flashcard Generator</h3>
+              <p>Auto-generate study cards from your document</p>
+            </div>
+            <div class="fc-controls">
+              <div class="count-ctrl">
+                <span>Cards:</span>
+                <div class="counter">
+                  <button id="fc-minus">−</button>
+                  <span id="fc-count">10</span>
+                  <button id="fc-plus">+</button>
+                </div>
+              </div>
+              <button class="btn-primary btn-gen" id="gen-fc-btn">🃏 Generate Flashcards</button>
+            </div>
+            <div class="fc-stats" id="fc-stats" style="display:none">
+              <span id="fc-total">0 cards</span>
+              <span>·</span>
+              <span id="fc-done">0 reviewed</span>
+              <button class="btn-sm" id="shuffle-btn">🔀 Shuffle</button>
+              <button class="btn-sm" id="dl-fc-btn">⬇️ Export</button>
+            </div>
+            <div class="diff-filter" id="diff-filter" style="display:none">
+              <button class="diff-btn active" data-diff="all">All</button>
+              <button class="diff-btn" data-diff="easy">🟢 Easy</button>
+              <button class="diff-btn" data-diff="medium">🟡 Medium</button>
+              <button class="diff-btn" data-diff="hard">🔴 Hard</button>
+            </div>
+            <div id="fc-area">
+              <div class="placeholder">🃏<br />Generate flashcards to start studying</div>
+            </div>
+          </div>
+        </div>
 
-<!-- Upload overlay -->
-<div id="overlay" class="overlay" style="display:none">
-  <div class="overlay-card">
-    <div class="ov-spinner"></div>
-    <h3 id="ov-title">Processing...</h3>
-    <p id="ov-msg">Extracting text and building knowledge index</p>
+        <!-- ── PODCAST TAB ──────────────────────────────── -->
+        <!-- ── PODCAST TAB ──────────────────────────────── -->
+        <div class="tab-panel podcast-3d-active" id="tab-podcast">
+          <div class="panel-body">
+
+            <div class="panel-header">
+              <h3>Teach Me Mode 🎙️</h3>
+              <p>Convert your document into an audio conversation</p>
+            </div>
+
+            <!-- Generate Podcast -->
+            <button class="btn-primary btn-gen" id="gen-pod-btn">
+              🎙️ Generate Teaching Script
+            </button>
+
+
+            <!-- 3D PODCAST CHARACTERS -->
+            <div class="podcast-3d-container" id="podcast-3d-container">
+              <div id="podcast-3d-scene"></div>
+              <div class="podcast-3d-speaker maya" id="podcast-3d-maya-label">Maya</div>
+              <div class="podcast-3d-speaker alex" id="podcast-3d-alex-label">Alex</div>
+              <div class="podcast-3d-status" id="podcast-3d-status">Loading 3D characters...</div>
+            </div>
+
+            <!-- ── PODCAST AVATARS ───────────────────────── -->
+            <div class="avatar-stage">
+
+              <!-- MAYA — TEACHER -->
+              <div class="avatar-card maya-avatar" id="maya-avatar">
+
+                <div class="avatar-image-wrap">
+                  <img src="/assets/avatars/saathi-avatars.png" alt="Maya Teacher">
+                </div>
+
+                <div class="avatar-name">
+                  <span class="avatar-dot"></span>
+                  Maya
+                </div>
+
+                <div class="avatar-role">
+                  Teacher
+                </div>
+
+              </div>
+
+
+              <!-- ALEX — STUDENT -->
+              <div class="avatar-card alex-avatar" id="alex-avatar">
+
+                <div class="avatar-image-wrap">
+                  <img src="/assets/avatars/saathi-avatars.png" alt="Alex Student">
+                </div>
+
+                <div class="avatar-name">
+                  <span class="avatar-dot"></span>
+                  Alex
+                </div>
+
+                <div class="avatar-role">
+                  Student
+                </div>
+
+              </div>
+
+            </div>
+            <!-- ── END PODCAST AVATARS ──────────────────── -->
+
+
+            <!-- ── EXISTING PODCAST PLAYER ──────────────── -->
+            <div id="player" style="display:none" class="player">
+
+              <!-- Player top -->
+              <div class="player-top">
+
+                <div class="player-info">
+
+                  <div class="disc" id="disc">
+                    🎵
+                  </div>
+
+                  <div>
+                    <p class="player-title" id="player-title">
+                      Document
+                    </p>
+
+                    <p class="player-dur" id="player-dur">
+                      ~0 min
+                    </p>
+                  </div>
+
+                </div>
+
+
+                <!-- Player controls -->
+                <div class="player-btns">
+
+                  <button class="pl-btn" id="restart-btn" title="Restart">
+                    ⏮
+                  </button>
+
+                  <button class="pl-btn pl-play" id="play-btn" title="Play / Pause">
+                    ▶️
+                  </button>
+
+                  <button class="pl-btn" id="stop-btn" title="Stop">
+                    ⏹
+                  </button>
+
+                </div>
+
+              </div>
+
+
+              <!-- ── CURRENT SPEAKER ────────────────────── -->
+              <div class="speaker-bar" id="speaker-bar">
+
+                <div class="sp-avatar" id="sp-avatar">
+                  A
+                </div>
+
+                <div class="sp-text">
+
+                  <span class="sp-name" id="sp-name">
+                    Alex
+                  </span>
+
+                  <span class="sp-line" id="sp-line"></span>
+
+                </div>
+
+                <div class="sound-waves" id="waves">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+
+              </div>
+
+
+              <!-- ── PROGRESS ──────────────────────────── -->
+              <div class="progress-wrap">
+
+                <div class="progress-bar">
+                  <div class="progress-fill" id="prog-fill"></div>
+                </div>
+
+                <div class="prog-times">
+                  <span id="t-cur">0:00</span>
+                  <span id="t-tot">0:00</span>
+                </div>
+
+              </div>
+
+
+              <!-- ── PLAYBACK SPEED ────────────────────── -->
+              <div class="speed-row">
+
+                Speed:
+
+                <button class="sp-btn active" data-speed="1">
+                  1×
+                </button>
+
+                <button class="sp-btn" data-speed="1.25">
+                  1.25×
+                </button>
+
+                <button class="sp-btn" data-speed="1.5">
+                  1.5×
+                </button>
+
+                <button class="sp-btn" data-speed="2">
+                  2×
+                </button>
+
+              </div>
+
+            </div>
+            <!-- ── END PODCAST PLAYER ──────────────────── -->
+
+
+            <!-- ── TRANSCRIPT ──────────────────────────── -->
+            <div id="transcript" style="display:none" class="transcript">
+
+              <div class="transcript-header">
+
+                <h4>
+                  Transcript
+                </h4>
+
+                <button class="btn-sm" id="dl-script-btn">
+                  ⬇️ Download
+                </button>
+
+              </div>
+
+              <div id="transcript-body" class="transcript-body"></div>
+
+            </div>
+            <!-- ── END TRANSCRIPT ──────────────────────── -->
+
+          </div>
+        </div>
+        <!-- ── END PODCAST TAB ────────────────────────── -->
+
+        <!-- ── EXAM TAB ─────────────────────────────────── -->
+        <div class="tab-panel" id="tab-exam">
+          <div class="panel-body">
+            <div class="panel-header">
+              <h3>Exam Mode 🎓</h3>
+              <p>Test your knowledge with AI-generated questions</p>
+            </div>
+            <div class="fc-controls">
+              <div class="count-ctrl">
+                <span>Questions:</span>
+                <div class="counter">
+                  <button id="ex-minus">−</button>
+                  <span id="ex-count">5</span>
+                  <button id="ex-plus">+</button>
+                </div>
+              </div>
+              <button class="btn-primary btn-gen" id="gen-exam-btn">🎓 Start Exam</button>
+            </div>
+            <div class="score-bar" id="score-bar" style="display:none">
+              <div class="score-item"><span class="score-num" id="sc-correct">0</span><span
+                  class="score-lbl">Correct</span></div>
+              <div class="score-sep"></div>
+              <div class="score-item"><span class="score-num" id="sc-total">0</span><span class="score-lbl">Total</span>
+              </div>
+              <div class="score-sep"></div>
+              <div class="score-item"><span class="score-num" id="sc-pct">—</span><span class="score-lbl">Score</span>
+              </div>
+            </div>
+            <div id="exam-area">
+              <div class="placeholder">🎓<br />Start an exam to test your knowledge</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /workspace -->
+    </main>
+  </div><!-- /app -->
+
+  <!-- Upload overlay -->
+  <div id="overlay" class="overlay" style="display:none">
+    <div class="overlay-card">
+      <div class="ov-spinner"></div>
+      <h3 id="ov-title">Processing...</h3>
+      <p id="ov-msg">Extracting text and building knowledge index</p>
+    </div>
   </div>
-</div>
 
-<!-- Toast -->
-<div id="toasts"></div>
+  <!-- Toast -->
+  <div id="toasts"></div>
 
-<script src="app.js"></script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+
+    /* =========================================================
+       DOM ELEMENTS
+    ========================================================= */
+
+    const sceneHost = document.getElementById('podcast-3d-scene');
+    const statusEl = document.getElementById('podcast-3d-status');
+    const mayaLabel = document.getElementById('podcast-3d-maya-label');
+    const alexLabel = document.getElementById('podcast-3d-alex-label');
+
+    if (!sceneHost) {
+      console.error('❌ #podcast-3d-scene was not found');
+    }
+
+
+    /* =========================================================
+       3D STATE
+    ========================================================= */
+
+    const state = {
+      scene: null,
+      camera: null,
+      renderer: null,
+      loader: null,
+
+      maya: null,
+      alex: null,
+
+      mayaMixer: null,
+      alexMixer: null,
+
+      mayaActions: {},
+      alexActions: {},
+
+      mayaCurrent: null,
+      alexCurrent: null,
+
+      modelsLoaded: 0
+    };
+
+    /*
+     * Expose state for debugging.
+     */
+    window.saathi3DDebug = state;
+
+
+    /* =========================================================
+       STATUS
+    ========================================================= */
+
+    function status(text) {
+      if (statusEl) {
+        statusEl.textContent = text;
+      }
+    }
+
+
+    /* =========================================================
+       MODEL PREPARATION
+    ========================================================= */
+
+    function prepareModel(model, targetHeight = 2.8) {
+
+      /*
+       * First calculate the original bounding box.
+       */
+      const box = new THREE.Box3().setFromObject(model);
+
+      const size = new THREE.Vector3();
+      box.getSize(size);
+
+      if (
+        size.y > 0 &&
+        Number.isFinite(size.y)
+      ) {
+        const scale =
+          targetHeight / size.y;
+
+        model.scale.setScalar(scale);
+      }
+
+
+      /*
+       * Recalculate after scaling.
+       */
+      const newBox =
+        new THREE.Box3().setFromObject(model);
+
+      const center =
+        new THREE.Vector3();
+
+      newBox.getCenter(center);
+
+
+      /*
+       * Center the character horizontally.
+       *
+       * This is important because some FBX files
+       * contain large internal offsets.
+       */
+      model.position.x -= center.x;
+      model.position.z -= center.z;
+
+
+      /*
+       * Put feet on the ground.
+       */
+      const groundedBox =
+        new THREE.Box3().setFromObject(model);
+
+      model.position.y -= groundedBox.min.y;
+
+
+      /*
+       * Disable frustum culling on every mesh.
+       *
+       * This prevents animated FBX characters from
+       * disappearing because Three.js calculates an
+       * incorrect bounding box.
+       */
+      model.traverse(object => {
+
+        if (!object.isMesh) {
+          return;
+        }
+
+        object.frustumCulled = false;
+
+        object.visible = true;
+
+        /*
+         * Make materials robust for FBX models.
+         */
+        if (object.material) {
+
+          const materials =
+            Array.isArray(object.material)
+              ? object.material
+              : [object.material];
+
+          materials.forEach(material => {
+
+            material.visible = true;
+
+            /*
+             * FBX models can sometimes have materials
+             * that render incorrectly from one side.
+             */
+            material.side = THREE.DoubleSide;
+
+            if (
+              material.opacity === undefined ||
+              material.opacity <= 0
+            ) {
+              material.opacity = 1;
+            }
+          });
+        }
+      });
+
+
+      /*
+       * Print useful information to Console.
+       */
+      const finalBox =
+        new THREE.Box3().setFromObject(model);
+
+      const finalSize =
+        new THREE.Vector3();
+
+      finalBox.getSize(finalSize);
+
+      console.log(
+        '3D model prepared:',
+        model.name || 'FBX',
+        {
+          height: finalSize.y,
+          width: finalSize.x,
+          depth: finalSize.z,
+          position: model.position,
+          scale: model.scale
+        }
+      );
+    }
+
+
+    /* =========================================================
+       ANIMATION HELPERS
+    ========================================================= */
+
+    function switchAction(current, next) {
+
+      if (!next) {
+        return current;
+      }
+
+      if (
+        current &&
+        current !== next
+      ) {
+        current.fadeOut(0.2);
+      }
+
+      next
+        .reset()
+        .fadeIn(0.2)
+        .play();
+
+      return next;
+    }
+
+
+    function playMaya(name) {
+
+      const action =
+        state.mayaActions[name];
+
+      if (!action) {
+        return;
+      }
+
+      state.mayaCurrent =
+        switchAction(
+          state.mayaCurrent,
+          action
+        );
+    }
+
+
+    function playAlex(name) {
+
+      const action =
+        state.alexActions[name];
+
+      if (!action) {
+        return;
+      }
+
+      state.alexCurrent =
+        switchAction(
+          state.alexCurrent,
+          action
+        );
+    }
+
+
+    /* =========================================================
+       SPEAKER LABELS
+    ========================================================= */
+
+    function showSpeaker(name) {
+
+      const speaker =
+        String(name || '').toLowerCase();
+
+      if (mayaLabel) {
+        mayaLabel.style.opacity =
+          speaker === 'maya'
+            ? '1'
+            : '0';
+      }
+
+      if (alexLabel) {
+        alexLabel.style.opacity =
+          speaker === 'alex'
+            ? '1'
+            : '0';
+      }
+    }
+
+
+    /* =========================================================
+       MAYA ANIMATIONS
+    ========================================================= */
+
+    function loadMayaAnimation(
+      name,
+      path
+    ) {
+
+      state.loader.load(
+
+        path,
+
+        fbx => {
+
+          if (
+            !fbx.animations ||
+            !fbx.animations.length
+          ) {
+            console.warn(
+              'Maya animation has no animation:',
+              name,
+              path
+            );
+
+            return;
+          }
+
+          if (!state.mayaMixer) {
+            console.warn(
+              'Maya mixer not ready:',
+              name
+            );
+
+            return;
+          }
+
+          const clip =
+            fbx.animations[0];
+
+          state.mayaActions[name] =
+            state.mayaMixer.clipAction(
+              clip
+            );
+
+          console.log(
+            'Maya animation ready:',
+            name
+          );
+
+          /*
+           * Start idle automatically.
+           */
+          if (
+            name === 'idle' &&
+            !state.mayaCurrent
+          ) {
+            playMaya('idle');
+          }
+
+        },
+
+        undefined,
+
+        error => {
+
+          console.error(
+            'Maya animation error:',
+            path,
+            error
+          );
+
+        }
+      );
+    }
+
+
+    /* =========================================================
+       ALEX ANIMATIONS
+    ========================================================= */
+
+    function loadAlexAnimations() {
+
+      /*
+       * Alex Idle
+       */
+      state.loader.load(
+
+        './three/models/Alex_Idle.fbx',
+
+        fbx => {
+
+          if (
+            !fbx.animations ||
+            !fbx.animations.length
+          ) {
+            return;
+          }
+
+          state.alexActions.idle =
+            state.alexMixer.clipAction(
+              fbx.animations[0]
+            );
+
+          playAlex('idle');
+
+          console.log(
+            'Alex Idle ready'
+          );
+
+        },
+
+        undefined,
+
+        error => {
+
+          console.error(
+            'Alex Idle error:',
+            error
+          );
+
+        }
+      );
+
+
+      /*
+       * Alex Talking
+       */
+      state.loader.load(
+
+        './three/models/Alex_Talking.fbx',
+
+        fbx => {
+
+          if (
+            !fbx.animations ||
+            !fbx.animations.length
+          ) {
+            return;
+          }
+
+          const clip =
+            fbx.animations[0];
+
+
+          /*
+           * Remove problematic root/hips
+           * quaternion tracks.
+           */
+          const tracks =
+            clip.tracks.filter(track => {
+
+              const name =
+                track.name.toLowerCase();
+
+              return !(
+                name.includes('quaternion') &&
+                (
+                  name.includes('hips') ||
+                  name.includes('root')
+                )
+              );
+            });
+
+
+          const fixedClip =
+            new THREE.AnimationClip(
+              'Alex_Talking_Fixed',
+              clip.duration,
+              tracks
+            );
+
+
+          state.alexActions.talking =
+            state.alexMixer.clipAction(
+              fixedClip
+            );
+
+          console.log(
+            'Alex Talking ready'
+          );
+
+        },
+
+        undefined,
+
+        error => {
+
+          console.error(
+            'Alex Talking error:',
+            error
+          );
+
+        }
+      );
+    }
+
+
+    /* =========================================================
+       CAMERA
+    ========================================================= */
+
+    function positionCamera() {
+
+      if (
+        !state.camera ||
+        !state.maya ||
+        !state.alex
+      ) {
+        return;
+      }
+
+      /*
+       * Keep Maya and Alex side-by-side.
+       */
+      state.maya.position.x = -0.9;
+      state.alex.position.x = 0.9;
+
+      /*
+       * Close camera for upper-body / half-body framing.
+       */
+      state.camera.position.set(
+        0,
+        1.75,
+        3.5
+      );
+
+      /*
+       * Look around chest/face level.
+       * This crops most of the legs while
+       * keeping the hands visible.
+       */
+      state.camera.lookAt(
+        0,
+        1.75,
+        0
+      );
+
+      state.camera.near = 0.1;
+      state.camera.far = 100;
+
+      state.camera.updateProjectionMatrix();
+
+      resize3D();
+
+      console.log('3D camera positioned for upper-body view');
+    }
+    /* =========================================================
+       LOAD CHARACTERS
+    ========================================================= */
+
+    function loadCharacters() {
+
+      /*
+       * -------------------------
+       * MAYA
+       * -------------------------
+       */
+
+      state.loader.load(
+
+        './three/models/Maya.fbx',
+
+        maya => {
+
+          state.maya = maya;
+
+          /*
+           * Expose for debugging.
+           */
+          window.saathi3DMaya =
+            maya;
+
+
+          /*
+           * Prepare model.
+           */
+          prepareModel(
+            maya,
+            2.8
+          );
+
+
+          /*
+           * Position Maya.
+           */
+          maya.position.x = -0.9;
+
+          /*
+           * Face the camera.
+           */
+          maya.rotation.y = 0;
+
+
+          state.scene.add(maya);
+
+
+          /*
+           * Animation mixer.
+           */
+          state.mayaMixer =
+            new THREE.AnimationMixer(
+              maya
+            );
+
+
+          /*
+           * Load all Maya animations.
+           */
+          loadMayaAnimation(
+            'idle',
+            './three/models/Maya_Idle.fbx'
+          );
+
+          loadMayaAnimation(
+            'talking',
+            './three/models/Maya_Talking.fbx'
+          );
+
+          loadMayaAnimation(
+            'talking2',
+            './three/models/Maya_Talking2.fbx'
+          );
+
+          loadMayaAnimation(
+            'pointing',
+            './three/models/Maya_Pointing.fbx'
+          );
+
+          loadMayaAnimation(
+            'thinking',
+            './three/models/Maya_Thinking.fbx'
+          );
+
+
+          state.modelsLoaded++;
+
+          status(
+            'Loading Alex...'
+          );
+
+
+          /*
+           * If Alex is already loaded,
+           * reposition the camera.
+           */
+          if (state.alex) {
+            positionCamera();
+          }
+
+        },
+
+        undefined,
+
+        error => {
+
+          console.error(
+            'Maya loading error:',
+            error
+          );
+
+          status(
+            'Maya failed to load — check Console'
+          );
+
+        }
+      );
+
+
+      /*
+       * -------------------------
+       * ALEX
+       * -------------------------
+       */
+
+      state.loader.load(
+
+        './three/models/alex.fbx',
+
+        alex => {
+
+          state.alex = alex;
+
+          /*
+           * Expose for debugging.
+           */
+          window.saathi3DAlex =
+            alex;
+
+
+          /*
+           * Prepare model.
+           */
+          prepareModel(
+            alex,
+            2.8
+          );
+
+
+          /*
+           * Position Alex.
+           */
+          alex.position.x = 0.9;
+
+
+          /*
+           * Face the camera.
+           */
+          alex.rotation.y = 0;
+
+
+          state.scene.add(alex);
+
+
+          /*
+           * Animation mixer.
+           */
+          state.alexMixer =
+            new THREE.AnimationMixer(
+              alex
+            );
+
+
+          /*
+           * Load Alex animations.
+           */
+          loadAlexAnimations();
+
+
+          state.modelsLoaded++;
+
+
+          /*
+           * Both characters exist.
+           */
+          if (state.maya) {
+
+            positionCamera();
+
+            status(
+              'Maya and Alex are ready'
+            );
+
+          }
+
+        },
+
+        undefined,
+
+        error => {
+
+          console.error(
+            'Alex loading error:',
+            error
+          );
+
+          status(
+            'Alex failed to load — check Console'
+          );
+
+        }
+      );
+    }
+
+
+    /* =========================================================
+       RESIZE
+    ========================================================= */
+
+    function resize3D() {
+
+      if (
+        !state.renderer ||
+        !state.camera ||
+        !sceneHost
+      ) {
+        return;
+      }
+
+
+      const width =
+        Math.max(
+          sceneHost.clientWidth,
+          1
+        );
+
+      const height =
+        Math.max(
+          sceneHost.clientHeight,
+          1
+        );
+
+
+      state.camera.aspect =
+        width / height;
+
+      state.camera.updateProjectionMatrix();
+
+
+      state.renderer.setSize(
+        width,
+        height,
+        false
+      );
+    }
+
+
+    /*
+     * ResizeObserver is more reliable when
+     * switching between Chat / Summary /
+     * Teach Me tabs.
+     */
+    let resizeObserver = null;
+
+    function setupResizeObserver() {
+
+      if (
+        !sceneHost ||
+        !window.ResizeObserver
+      ) {
+        return;
+      }
+
+
+      resizeObserver =
+        new ResizeObserver(() => {
+
+          resize3D();
+
+        });
+
+
+      resizeObserver.observe(
+        sceneHost
+      );
+    }
+
+
+    /* =========================================================
+       THREE.JS INITIALIZATION
+    ========================================================= */
+
+    function init3D() {
+
+      if (!sceneHost) {
+        return;
+      }
+
+
+      /*
+       * Scene
+       */
+      state.scene =
+        new THREE.Scene();
+
+      state.scene.background =
+        new THREE.Color(
+          0x202020
+        );
+
+      const mayaPanel = new THREE.Mesh(
+        new THREE.PlaneGeometry(3.8, 5),
+        new THREE.MeshBasicMaterial({
+          color: 0x202020
+        })
+      );
+
+      mayaPanel.position.set(-2.05, 1.8, -0.8);
+      state.scene.add(mayaPanel);
+
+      const alexPanel = new THREE.Mesh(
+        new THREE.PlaneGeometry(3.8, 5),
+        new THREE.MeshBasicMaterial({
+          color: 0x202020
+        })
+      );
+
+      alexPanel.position.set(2.05, 1.8, -0.8);
+      state.scene.add(alexPanel);
+      const divider = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.025, 5),
+        new THREE.MeshBasicMaterial({
+          color: 0xffffff
+        })
+      );
+
+      divider.position.set(0, 1.8, -0.75);
+      state.scene.add(divider);
+      /*
+       * Initial dimensions
+       */
+      const width =
+        Math.max(
+          sceneHost.clientWidth,
+          1
+        );
+
+      const height =
+        Math.max(
+          sceneHost.clientHeight,
+          1
+        );
+
+
+      /*
+       * Camera
+       */
+      state.camera =
+        new THREE.PerspectiveCamera(
+          35,
+          width / height,
+          0.1,
+          100
+        );
+
+
+      state.camera.position.set(
+        0,
+        1.45,
+        6
+      );
+
+      state.camera.lookAt(
+        0,
+        1.3,
+        0
+      );
+
+
+      /*
+       * Renderer
+       */
+      state.renderer =
+        new THREE.WebGLRenderer({
+          antialias: true,
+          alpha: false
+        });
+
+
+      state.renderer.setPixelRatio(
+        Math.min(
+          window.devicePixelRatio || 1,
+          2
+        )
+      );
+
+
+      state.renderer.setSize(
+        width,
+        height,
+        false
+      );
+
+
+      /*
+       * Better rendering.
+       */
+      state.renderer.outputColorSpace =
+        THREE.SRGBColorSpace;
+
+
+      state.renderer.toneMapping =
+        THREE.ACESFilmicToneMapping;
+
+      state.renderer.toneMappingExposure =
+        1.15;
+
+
+      /*
+       * Add canvas.
+       */
+      sceneHost.appendChild(
+        state.renderer.domElement
+      );
+
+
+      /*
+       * Lighting
+       */
+      const ambient =
+        new THREE.AmbientLight(
+          0xffffff,
+          2.2
+        );
+
+      state.scene.add(
+        ambient
+      );
+
+
+      const key =
+        new THREE.DirectionalLight(
+          0xffffff,
+          3.5
+        );
+
+      key.position.set(
+        3,
+        6,
+        5
+      );
+
+      state.scene.add(
+        key
+      );
+
+
+      const fill =
+        new THREE.DirectionalLight(
+          0xffffff,
+          1.5
+        );
+
+      fill.position.set(
+        -4,
+        3,
+        3
+      );
+
+      state.scene.add(
+        fill
+      );
+
+
+      const front =
+        new THREE.DirectionalLight(
+          0xffffff,
+          1.8
+        );
+
+      front.position.set(
+        0,
+        3,
+        6
+      );
+
+      state.scene.add(
+        front
+      );
+
+
+      /*
+       * FBX Loader
+       */
+      state.loader =
+        new FBXLoader();
+
+
+      /*
+       * Load characters.
+       */
+      loadCharacters();
+
+
+      /*
+       * Resize handling.
+       */
+      window.addEventListener(
+        'resize',
+        resize3D
+      );
+
+
+      setupResizeObserver();
+
+
+      /*
+       * The Teach Me section may initially
+       * be hidden, so resize again later.
+       */
+      setTimeout(
+        resize3D,
+        100
+      );
+
+      setTimeout(
+        resize3D,
+        500
+      );
+
+      setTimeout(
+        resize3D,
+        1000
+      );
+
+      setTimeout(
+        resize3D,
+        2000
+      );
+    }
+
+
+    /* =========================================================
+       ANIMATION LOOP
+    ========================================================= */
+
+    const clock =
+      new THREE.Clock();
+
+
+    function animate() {
+
+      requestAnimationFrame(
+        animate
+      );
+
+
+      const delta =
+        clock.getDelta();
+
+
+      if (state.mayaMixer) {
+
+        state.mayaMixer.update(
+          delta
+        );
+
+      }
+
+
+      if (state.alexMixer) {
+
+        state.alexMixer.update(
+          delta
+        );
+
+      }
+
+
+      if (state.renderer) {
+
+        state.renderer.render(
+          state.scene,
+          state.camera
+        );
+
+      }
+    }
+
+
+    /* =========================================================
+       PUBLIC PODCAST API
+    ========================================================= */
+
+    window.saathi3D = {
+
+      /*
+       * Change active speaker.
+       */
+      setSpeaker(speaker) {
+
+        const s =
+          String(
+            speaker || ''
+          ).toLowerCase();
+
+
+        if (s === 'maya') {
+
+          playMaya(
+            'talking'
+          );
+
+          playAlex(
+            'idle'
+          );
+
+          showSpeaker(
+            'maya'
+          );
+
+          status(
+            'Maya is teaching'
+          );
+
+        }
+
+        else if (s === 'alex') {
+
+          playAlex(
+            'talking'
+          );
+
+          playMaya(
+            'idle'
+          );
+
+          showSpeaker(
+            'alex'
+          );
+
+          status(
+            'Alex is speaking'
+          );
+
+        }
+
+        else {
+
+          playMaya(
+            'idle'
+          );
+
+          playAlex(
+            'idle'
+          );
+
+          showSpeaker(
+            ''
+          );
+
+          status(
+            'Ready'
+          );
+        }
+      },
+
+
+      /*
+       * Maya gesture.
+       */
+      mayaGesture(name) {
+
+        if (
+          !state.mayaActions[name]
+        ) {
+          return;
+        }
+
+
+        playMaya(
+          name
+        );
+
+        playAlex(
+          'idle'
+        );
+
+        showSpeaker(
+          'maya'
+        );
+      },
+
+
+      /*
+       * Convenience methods.
+       */
+      mayaIdle() {
+
+        this.mayaGesture(
+          'idle'
+        );
+
+      },
+
+
+      mayaTalking() {
+
+        this.mayaGesture(
+          'talking'
+        );
+
+      },
+
+
+      mayaTalking2() {
+
+        this.mayaGesture(
+          'talking2'
+        );
+
+      },
+
+
+      mayaPointing() {
+
+        this.mayaGesture(
+          'pointing'
+        );
+
+      },
+
+
+      mayaThinking() {
+
+        this.mayaGesture(
+          'thinking'
+        );
+
+      },
+
+
+      /*
+       * Alex controls.
+       */
+      alexIdle() {
+
+        playAlex(
+          'idle'
+        );
+
+        playMaya(
+          'idle'
+        );
+
+        showSpeaker(
+          ''
+        );
+
+        status(
+          'Ready'
+        );
+
+      },
+
+
+      alexTalking() {
+
+        this.setSpeaker(
+          'alex'
+        );
+
+      }
+    };
+
+
+    /* =========================================================
+       START
+    ========================================================= */
+
+    init3D();
+
+    animate();
+
+  </script>
+
+  <script src="app.js"></script>
 </body>
+
 </html>

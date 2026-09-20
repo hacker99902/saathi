@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Maya 3D Test</title>
+
+    <style>
+        html, body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #202020;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+    }
+}
+</script>
+
+<script type="module">
+
+import * as THREE from 'three';
+
+import { GLTFLoader } from
+    'three/addons/loaders/GLTFLoader.js';
+
+
+// ─────────────────────────────
+// SCENE
+// ─────────────────────────────
+
+const scene = new THREE.Scene();
+
+scene.background = new THREE.Color(0x202020);
+
+
+// ─────────────────────────────
+// CAMERA
+// ─────────────────────────────
+
+const camera = new THREE.PerspectiveCamera(
+    35,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    100
+);
+
+camera.position.set(0, 1.5, 4);
+
+
+// ─────────────────────────────
+// RENDERER
+// ─────────────────────────────
+
+const renderer = new THREE.WebGLRenderer({
+    antialias: true
+});
+
+renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+);
+
+renderer.setPixelRatio(
+    Math.min(window.devicePixelRatio, 2)
+);
+
+document.body.appendChild(
+    renderer.domElement
+);
+
+
+// ─────────────────────────────
+// LIGHTS
+// ─────────────────────────────
+
+const ambientLight =
+    new THREE.AmbientLight(
+        0xffffff,
+        2
+    );
+
+scene.add(ambientLight);
+
+
+const keyLight =
+    new THREE.DirectionalLight(
+        0xffffff,
+        3
+    );
+
+keyLight.position.set(
+    2,
+    4,
+    3
+);
+
+scene.add(keyLight);
+
+
+// ─────────────────────────────
+// MAYA
+// ─────────────────────────────
+
+const loader = new GLTFLoader();
+
+let maya = null;
+let mixer = null;
+
+
+loader.load(
+
+    './models/maya.glb',
+
+    (gltf) => {
+
+        maya = gltf.scene;
+
+        scene.add(maya);
+
+        maya.position.set(
+            0,
+            0,
+            0
+        );
+
+        maya.scale.setScalar(1);
+
+        console.log(
+            'Maya loaded:',
+            maya
+        );
+
+        console.log(
+            'Animations:',
+            gltf.animations
+        );
+
+
+        // Animation system
+        if (gltf.animations.length > 0) {
+
+            mixer =
+                new THREE.AnimationMixer(
+                    maya
+                );
+
+            const action =
+                mixer.clipAction(
+                    gltf.animations[0]
+                );
+
+            action.play();
+
+            console.log(
+                'Playing:',
+                gltf.animations[0].name
+            );
+        }
+
+    },
+
+    undefined,
+
+    (error) => {
+
+        console.error(
+            'Could not load Maya:',
+            error
+        );
+
+    }
+
+);
+
+
+// ─────────────────────────────
+// ANIMATION LOOP
+// ─────────────────────────────
+
+const clock =
+    new THREE.Clock();
+
+
+function animate() {
+
+    requestAnimationFrame(
+        animate
+    );
+
+    const delta =
+        clock.getDelta();
+
+    if (mixer) {
+
+        mixer.update(delta);
+
+    }
+
+    renderer.render(
+        scene,
+        camera
+    );
+}
+
+animate();
+
+
+// ─────────────────────────────
+// RESIZE
+// ─────────────────────────────
+
+window.addEventListener(
+    'resize',
+    () => {
+
+        camera.aspect =
+            window.innerWidth /
+            window.innerHeight;
+
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(
+            window.innerWidth,
+            window.innerHeight
+        );
+
+    }
+);
+
+</script>
+
+</body>
+</html>

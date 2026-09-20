@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Maya + Alex Speaker Test</title>
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #202020;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* ========================================
+           CONTROLS
+        ======================================== */
+
+        .controls {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+
+            z-index: 10;
+
+            width: 430px;
+
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        button {
+            padding: 10px 14px;
+
+            border: none;
+            border-radius: 8px;
+
+            background: #ffffff;
+            color: #111111;
+
+            cursor: pointer;
+
+            font-size: 14px;
+            font-weight: 600;
+
+            transition:
+                transform 0.15s,
+                background 0.15s;
+        }
+
+        button:hover {
+            transform: scale(1.03);
+            background: #eeeeee;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* ========================================
+           STATUS
+        ======================================== */
+
+        .status {
+            position: fixed;
+
+            left: 15px;
+            bottom: 15px;
+
+            z-index: 10;
+
+            padding: 10px 16px;
+
+            background: rgba(0, 0, 0, 0.75);
+
+            color: white;
+
+            border-radius: 8px;
+
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- ========================================
+         CONTROLS
+    ======================================== -->
+
+    <div class="controls">
+
+        <!-- Maya -->
+
+        <button id="mayaIdleBtn">
+            Maya Idle
+        </button>
+
+        <button id="mayaTalkingBtn">
+            Maya Talking
+        </button>
+
+        <button id="mayaTalking2Btn">
+            Maya Talking 2
+        </button>
+
+        <button id="mayaPointingBtn">
+            Maya Pointing
+        </button>
+
+        <button id="mayaThinkingBtn">
+            Maya Thinking
+        </button>
+
+
+        <!-- Alex -->
+
+        <button id="alexIdleBtn">
+            Alex Idle
+        </button>
+
+        <button id="alexTalkingBtn">
+            Alex Talking
+        </button>
+
+    </div>
+
+
+    <!-- ========================================
+         STATUS
+    ======================================== -->
+
+    <div
+        class="status"
+        id="status"
+    >
+        Loading characters...
+    </div>
+
+
+    <!-- ========================================
+         THREE.JS IMPORT MAP
+    ======================================== -->
+
+    <script type="importmap">
+
+    {
+        "imports": {
+
+            "three":
+                "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+
+            "three/addons/":
+                "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+
+        }
+    }
+
+    </script>
+
+
+    <!-- ========================================
+         MAIN THREE.JS
+    ======================================== -->
+
+    <script type="module">
+
+
+        import * as THREE
+            from 'three';
+
+
+        import {
+            FBXLoader
+        } from
+            'three/addons/loaders/FBXLoader.js';
+
+
+
+        // ========================================
+        // SCENE
+        // ========================================
+
+        const scene =
+            new THREE.Scene();
+
+
+        scene.background =
+            new THREE.Color(
+                0x202020
+            );
+
+
+
+        // ========================================
+        // CAMERA
+        // ========================================
+
+        const camera =
+            new THREE.PerspectiveCamera(
+
+                35,
+
+                window.innerWidth /
+                window.innerHeight,
+
+                0.1,
+
+                100
+
+            );
+
+
+        camera.position.set(
+
+            0,
+
+            1.45,
+
+            6
+
+        );
+
+
+        camera.lookAt(
+
+            0,
+
+            1.3,
+
+            0
+
+        );
+
+
+
+        // ========================================
+        // RENDERER
+        // ========================================
+
+        const renderer =
+            new THREE.WebGLRenderer({
+
+                antialias: true
+
+            });
+
+
+        renderer.setSize(
+
+            window.innerWidth,
+
+            window.innerHeight
+
+        );
+
+
+        renderer.setPixelRatio(
+
+            Math.min(
+
+                window.devicePixelRatio,
+
+                2
+
+            )
+
+        );
+
+
+        document.body.appendChild(
+
+            renderer.domElement
+
+        );
+
+
+
+        // ========================================
+        // LIGHTING
+        // ========================================
+
+        const ambientLight =
+            new THREE.AmbientLight(
+
+                0xffffff,
+
+                2
+
+            );
+
+
+        scene.add(
+
+            ambientLight
+
+        );
+
+
+        const keyLight =
+            new THREE.DirectionalLight(
+
+                0xffffff,
+
+                3
+
+            );
+
+
+        keyLight.position.set(
+
+            2,
+
+            5,
+
+            4
+
+        );
+
+
+        scene.add(
+
+            keyLight
+
+        );
+
+
+
+        // ========================================
+        // FBX LOADER
+        // ========================================
+
+        const fbxLoader =
+            new FBXLoader();
+
+
+
+        // ========================================
+        // CHARACTERS
+        // ========================================
+
+        let maya = null;
+
+        let alex = null;
+
+
+
+        // ========================================
+        // MIXERS
+        // ========================================
+
+        let mayaMixer = null;
+
+        let alexMixer = null;
+
+
+
+        // ========================================
+        // MAYA ACTIONS
+        // ========================================
+
+        let mayaIdleAction = null;
+
+        let mayaTalkingAction = null;
+
+        let mayaTalking2Action = null;
+
+        let mayaPointingAction = null;
+
+        let mayaThinkingAction = null;
+
+        let mayaCurrentAction = null;
+
+
+
+        // ========================================
+        // ALEX ACTIONS
+        // ========================================
+
+        let alexIdleAction = null;
+
+        let alexTalkingAction = null;
+
+        let alexCurrentAction = null;
+
+
+
+        // ========================================
+        // STATUS
+        // ========================================
+
+        const status =
+            document.getElementById(
+
+                'status'
+
+            );
+
+
+        function setStatus(text) {
+
+            status.textContent =
+                text;
+
+        }
+
+
+
+        // ========================================
+        // NORMALIZE CHARACTER
+        // ========================================
+
+        function normalizeCharacter(
+
+            model,
+
+            targetHeight = 2.8
+
+        ) {
+
+
+            const box =
+                new THREE.Box3()
+                    .setFromObject(model);
+
+
+            const size =
+                new THREE.Vector3();
+
+
+            box.getSize(size);
+
+
+            const currentHeight =
+                size.y;
+
+
+            if (
+
+                currentHeight > 0 &&
+
+                Number.isFinite(
+                    currentHeight
+                )
+
+            ) {
+
+
+                const scale =
+                    targetHeight /
+                    currentHeight;
+
+
+                model.scale.multiplyScalar(
+
+                    scale
+
+                );
+
+            }
+
+
+            const newBox =
+                new THREE.Box3()
+                    .setFromObject(model);
+
+
+            // Put feet on ground
+
+            model.position.y -=
+                newBox.min.y;
+
+        }
+
+
+
+        // ========================================
+        // MAYA
+        // ========================================
+
+        fbxLoader.load(
+
+            './models/Maya.fbx',
+
+            (mayaModel) => {
+
+
+                maya =
+                    mayaModel;
+
+
+                scene.add(
+                    maya
+                );
+
+
+                console.log(
+                    'Maya character loaded'
+                );
+
+
+                // Normalize Maya
+
+                normalizeCharacter(
+
+                    maya,
+
+                    2.8
+
+                );
+
+
+                // Position Maya
+
+                maya.position.x =
+                    -1.0;
+
+
+                maya.position.z =
+                    0;
+
+
+                // Face audience
+
+                maya.rotation.y =
+                    0;
+
+
+                // Mixer
+
+                mayaMixer =
+                    new THREE.AnimationMixer(
+
+                        maya
+
+                    );
+
+
+                console.log(
+
+                    'Maya mixer created'
+
+                );
+
+
+                // ========================================
+                // MAYA IDLE
+                // ========================================
+
+                loadMayaAnimation(
+
+                    './models/Maya_Idle.fbx',
+
+                    (action) => {
+
+                        mayaIdleAction =
+                            action;
+
+                        console.log(
+                            'Maya Idle ready'
+                        );
+
+
+                        // Start idle
+
+                        playMayaAnimation(
+
+                            mayaIdleAction
+
+                        );
+
+                    }
+
+                );
+
+
+                // ========================================
+                // MAYA TALKING
+                // ========================================
+
+                loadMayaAnimation(
+
+                    './models/Maya_Talking.fbx',
+
+                    (action) => {
+
+                        mayaTalkingAction =
+                            action;
+
+                        console.log(
+                            'Maya Talking ready'
+                        );
+
+                    }
+
+                );
+
+
+                // ========================================
+                // MAYA TALKING 2
+                // ========================================
+
+                loadMayaAnimation(
+
+                    './models/Maya_Talking2.fbx',
+
+                    (action) => {
+
+                        mayaTalking2Action =
+                            action;
+
+                        console.log(
+                            'Maya Talking 2 ready'
+                        );
+
+                    }
+
+                );
+
+
+                // ========================================
+                // MAYA POINTING
+                // ========================================
+
+                loadMayaAnimation(
+
+                    './models/Maya_Pointing.fbx',
+
+                    (action) => {
+
+                        mayaPointingAction =
+                            action;
+
+                        console.log(
+                            'Maya Pointing ready'
+                        );
+
+                    }
+
+                );
+
+
+                // ========================================
+                // MAYA THINKING
+                // ========================================
+
+                loadMayaAnimation(
+
+                    './models/Maya_Thinking.fbx',
+
+                    (action) => {
+
+                        mayaThinkingAction =
+                            action;
+
+                        console.log(
+                            'Maya Thinking ready'
+                        );
+
+                    }
+
+                );
+
+            },
+
+
+            undefined,
+
+
+            (error) => {
+
+                console.error(
+
+                    'Maya character loading error:',
+
+                    error
+
+                );
+
+
+                setStatus(
+
+                    'Maya failed to load'
+
+                );
+
+            }
+
+        );
+
+
+
+        // ========================================
+        // LOAD MAYA ANIMATION
+        // ========================================
+
+        function loadMayaAnimation(
+
+            file,
+
+            onReady
+
+        ) {
+
+
+            fbxLoader.load(
+
+                file,
+
+                (animationFBX) => {
+
+
+                    console.log(
+
+                        'Maya animation loaded:',
+
+                        file
+
+                    );
+
+
+                    console.log(
+
+                        'Animation names:',
+
+                        animationFBX.animations.map(
+
+                            animation =>
+                                animation.name
+
+                        )
+
+                    );
+
+
+                    if (
+
+                        animationFBX.animations.length === 0
+
+                    ) {
+
+                        console.warn(
+
+                            'No animation found:',
+
+                            file
+
+                        );
+
+                        return;
+
+                    }
+
+
+                    const clip =
+                        animationFBX.animations[0];
+
+
+                    const action =
+                        mayaMixer.clipAction(
+
+                            clip
+
+                        );
+
+
+                    onReady(
+                        action
+                    );
+
+                },
+
+
+                undefined,
+
+
+                (error) => {
+
+                    console.error(
+
+                        'Maya animation error:',
+
+                        file,
+
+                        error
+
+                    );
+
+                }
+
+            );
+
+        }
+
+
+
+        // ========================================
+        // ALEX
+        // ========================================
+
+        fbxLoader.load(
+
+            './models/alex.fbx',
+
+            (alexModel) => {
+
+
+                alex =
+                    alexModel;
+
+
+                scene.add(
+                    alex
+                );
+
+
+                console.log(
+
+                    'Alex character loaded'
+
+                );
+
+
+                // Normalize Alex
+
+                normalizeCharacter(
+
+                    alex,
+
+                    2.8
+
+                );
+
+
+                // Position Alex
+
+                alex.position.x =
+                    1.0;
+
+
+                alex.position.z =
+                    0;
+
+
+                // Face audience
+
+                alex.rotation.y =
+                    0;
+
+
+                // Mixer
+
+                alexMixer =
+                    new THREE.AnimationMixer(
+
+                        alex
+
+                    );
+
+
+                console.log(
+
+                    'Alex mixer created'
+
+                );
+
+
+                // ========================================
+                // ALEX IDLE
+                // ========================================
+
+                fbxLoader.load(
+
+                    './models/Alex_Idle.fbx',
+
+                    (idle) => {
+
+
+                        console.log(
+
+                            'Alex Idle loaded'
+
+                        );
+
+
+                        if (
+
+                            idle.animations.length > 0
+
+                        ) {
+
+
+                            alexIdleAction =
+                                alexMixer.clipAction(
+
+                                    idle.animations[0]
+
+                                );
+
+
+                            console.log(
+
+                                'Alex Idle ready'
+
+                            );
+
+
+                            playAlexAnimation(
+
+                                alexIdleAction
+
+                            );
+
+                        }
+
+                    },
+
+
+                    undefined,
+
+
+                    (error) => {
+
+                        console.error(
+
+                            'Alex Idle error:',
+
+                            error
+
+                        );
+
+                    }
+
+                );
+
+
+                // ========================================
+                // ALEX TALKING
+                // ========================================
+
+                fbxLoader.load(
+
+                    './models/Alex_Talking.fbx',
+
+                    (talking) => {
+
+
+                        console.log(
+
+                            'Alex Talking loaded'
+
+                        );
+
+
+                        if (
+
+                            talking.animations.length > 0
+
+                        ) {
+
+
+                            const originalClip =
+                                talking.animations[0];
+
+
+                            console.log(
+
+                                'Original Alex Talking tracks:',
+
+                                originalClip.tracks.map(
+
+                                    track =>
+                                        track.name
+
+                                )
+
+                            );
+
+
+                            // Remove root / hips
+                            // rotation
+
+                            const fixedTracks =
+
+                                originalClip.tracks.filter(
+
+                                    track => {
+
+
+                                        const name =
+
+                                            track.name
+                                                .toLowerCase();
+
+
+                                        const isQuaternion =
+
+                                            name.includes(
+                                                'quaternion'
+                                            );
+
+
+                                        const isRootBone =
+
+                                            name.includes(
+                                                'hips'
+                                            ) ||
+
+                                            name.includes(
+                                                'root'
+                                            );
+
+
+                                        if (
+
+                                            isQuaternion &&
+
+                                            isRootBone
+
+                                        ) {
+
+
+                                            console.log(
+
+                                                'Removed Alex root rotation:',
+
+                                                track.name
+
+                                            );
+
+
+                                            return false;
+
+                                        }
+
+
+                                        return true;
+
+                                    }
+
+                                );
+
+
+                            const fixedClip =
+
+                                new THREE.AnimationClip(
+
+                                    'Alex_Talking_Fixed',
+
+                                    originalClip.duration,
+
+                                    fixedTracks
+
+                                );
+
+
+                            alexTalkingAction =
+
+                                alexMixer.clipAction(
+
+                                    fixedClip
+
+                                );
+
+
+                            console.log(
+
+                                'Alex Talking ready'
+
+                            );
+
+                        }
+
+                    },
+
+
+                    undefined,
+
+
+                    (error) => {
+
+                        console.error(
+
+                            'Alex Talking error:',
+
+                            error
+
+                        );
+
+                    }
+
+                );
+
+            },
+
+
+            undefined,
+
+
+            (error) => {
+
+                console.error(
+
+                    'Alex character loading error:',
+
+                    error
+
+                );
+
+
+                setStatus(
+
+                    'Alex failed to load'
+
+                );
+
+            }
+
+        );
+
+
+
+        // ========================================
+        // PLAY MAYA ANIMATION
+        // ========================================
+
+        function playMayaAnimation(
+
+            newAction
+
+        ) {
+
+
+            if (!newAction) {
+
+                console.warn(
+
+                    'Maya animation not ready yet'
+
+                );
+
+                return;
+
+            }
+
+
+            if (
+
+                mayaCurrentAction &&
+
+                mayaCurrentAction !== newAction
+
+            ) {
+
+
+                mayaCurrentAction.fadeOut(
+
+                    0.25
+
+                );
+
+            }
+
+
+            newAction
+                .reset()
+                .fadeIn(0.25)
+                .play();
+
+
+            mayaCurrentAction =
+                newAction;
+
+        }
+
+
+
+        // ========================================
+        // PLAY ALEX ANIMATION
+        // ========================================
+
+        function playAlexAnimation(
+
+            newAction
+
+        ) {
+
+
+            if (!newAction) {
+
+                console.warn(
+
+                    'Alex animation not ready yet'
+
+                );
+
+                return;
+
+            }
+
+
+            if (
+
+                alexCurrentAction &&
+
+                alexCurrentAction !== newAction
+
+            ) {
+
+
+                alexCurrentAction.fadeOut(
+
+                    0.25
+
+                );
+
+            }
+
+
+            newAction
+                .reset()
+                .fadeIn(0.25)
+                .play();
+
+
+            alexCurrentAction =
+                newAction;
+
+        }
+
+
+
+        // ========================================
+        // MAYA IDLE BUTTON
+        // ========================================
+
+        document
+            .getElementById(
+                'mayaIdleBtn'
+            )
+            .addEventListener(
+
+                'click',
+
+                () => {
+
+
+                    playMayaAnimation(
+
+                        mayaIdleAction
+
+                    );
+
+
+                    playAlexAnimation(
+
+                        alexIdleAction
+
+                    );
+
+
+                    setStatus(
+
+                        'Maya Idle • Alex Idle'
+
+                    );
+
+                }
+
+            );
+
+
+
+        // ========================================
+        // MAYA TALKING BUTTON
+        // ========================================
+
+        document
+            .getElementById(
+                'mayaTalkingBtn'
+            )
+            .addEventListener(
+
+                'click',
+
+                () => {
+
+
+                    playMayaAnimation(
+
+                        mayaTalkingAction
+
+                    );
+
+
+                    playAlexAnimation(
+
+                        alexIdleAction
+
+                    );
+
+
+                    setStatus(
+
+                        'Maya Talking • Alex Listening'
+
+                    );
+
+                }
+
+            );
+
+
+
+        // ========================================
+        // MAYA TALKING 2 BUTTON
+        // ========================================
+
+        document
+            .getElementById(
+                'mayaTalking2Btn'
+            )
+            .addEventListener(
+
+                'click',
+
+                () => {
+
+
+                    playMayaAnimation(
+
+                        mayaTalking2Action
+
+                    );
+
+
+                    playAlexAnimation(
+
+                        alexIdleAction
+
+                    );
+
+
+                    setStatus(
+
+                        'Maya Talking 2 • Alex Listening'
+
+                    );
+
+                }
+
+            );
+
+
+
+        // ========================================
+        // MAYA POINTING BUTTON
+        // ========================================
+
+        document
+            .getElementById(
+                'mayaPointingBtn'
+            )
+            .addEventListener(
+
+                'click',
+
+                () => {
+
+
+                    playMayaAnimation(
+
+                        mayaPointingAction
+
+                    );
+
+
+                    playAlexAnimation(
+
+                        alexIdleAction
+
+                    );
+
+
+                    setStatus(
+
+                        'Maya Pointing • Alex Listening'
+
+                    );
+
+                }
+
+            );
+
+
+
+        // ========================================
+        // MAYA THINKING BUTTON
+        // ========================================
+
+        document
+            .getElementById(
+                'mayaThinkingBtn'
+            )
+            .addEventListener(
+
+                'click',
+
+                () => {
+
+
+                    playMayaAnimation(
+
+                        mayaThinkingAction
+
+                    );
+
+
+                    playAlexAnimation(
+
+                        alexIdleAction
+
+                    );
+
+
+                    setStatus(
+
+                        'Maya Thinking • Alex Listening'
+
+                    );
+
+                }
+
+            );
+
+
+
+        // ========================================
+        // ALEX IDLE BUTTON
+        // ========================================
+
+        document
+            .getElementById(
+                'alexIdleBtn'
+            )
+            .addEventListener(
+
+                'click',
+
+                () => {
+
+
+                    playAlexAnimation(
+
+                        alexIdleAction
+
+                    );
+
+
+                    playMayaAnimation(
+
+                        mayaIdleAction
+
+                    );
+
+
+                    setStatus(
+
+                        'Alex Idle • Maya Idle'
+
+                    );
+
+                }
+
+            );
+
+
+
+        // ========================================
+        // ALEX TALKING BUTTON
+        // ========================================
+
+        document
+            .getElementById(
+                'alexTalkingBtn'
+            )
+            .addEventListener(
+
+                'click',
+
+                () => {
+
+
+                    playAlexAnimation(
+
+                        alexTalkingAction
+
+                    );
+
+
+                    playMayaAnimation(
+
+                        mayaIdleAction
+
+                    );
+
+
+                    setStatus(
+
+                        'Alex Talking • Maya Listening'
+
+                    );
+
+                }
+
+            );
+
+
+
+        // ========================================
+        // ANIMATION LOOP
+        // ========================================
+
+        const clock =
+            new THREE.Clock();
+
+
+        function animate() {
+
+
+            requestAnimationFrame(
+
+                animate
+
+            );
+
+
+            const delta =
+                clock.getDelta();
+
+
+            // Maya
+
+            if (mayaMixer) {
+
+                mayaMixer.update(
+
+                    delta
+
+                );
+
+            }
+
+
+            // Alex
+
+            if (alexMixer) {
+
+                alexMixer.update(
+
+                    delta
+
+                );
+
+            }
+
+
+            // ========================================
+            // KEEP BOTH FACING AUDIENCE
+            // ========================================
+
+            if (maya) {
+
+                maya.rotation.y =
+                    0;
+
+            }
+
+
+            if (alex) {
+
+                alex.rotation.y =
+                    0;
+
+            }
+
+
+            // ========================================
+            // RENDER
+            // ========================================
+
+            renderer.render(
+
+                scene,
+
+                camera
+
+            );
+
+        }
+
+
+        animate();
+
+
+
+        // ========================================
+        // WINDOW RESIZE
+        // ========================================
+
+        window.addEventListener(
+
+            'resize',
+
+            () => {
+
+
+                camera.aspect =
+
+                    window.innerWidth /
+
+                    window.innerHeight;
+
+
+                camera.updateProjectionMatrix();
+
+
+                renderer.setSize(
+
+                    window.innerWidth,
+
+                    window.innerHeight
+
+                );
+
+            }
+
+        );
+
+
+    </script>
+
+</body>
+
+</html>
