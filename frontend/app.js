@@ -3,7 +3,7 @@
    ═══════════════════════════════════════════════════ */
 'use strict';
 
-const API = '/api';
+const API = 'https://saathi-backend-rdli.onrender.com/api';
 const TK = 'saathi_token';
 const UK = 'saathi_user';
 
