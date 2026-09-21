@@ -5904,3 +5904,138 @@ body {
   }
 
 }
+/* =========================================
+   MOBILE DOCUMENT SELECTION CHECKBOX
+   ========================================= */
+
+.mobile-doc-check {
+  width: 26px;
+  height: 26px;
+
+  min-width: 26px;
+  min-height: 26px;
+
+  padding: 0;
+  margin: 0;
+
+  border: 1.5px solid #aeb4c2;
+  border-radius: 6px;
+
+  background: #ffffff;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.12s ease;
+}
+
+/* Hide tick initially */
+.mobile-doc-check .checkmark {
+  display: none;
+}
+
+/* Selected state */
+.mobile-doc-check.selected {
+  background: #6d4aff;
+  border-color: #6d4aff;
+}
+
+/* Show tick only after selection */
+.mobile-doc-check.selected .checkmark {
+  display: block;
+
+  color: white;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Small press animation */
+.mobile-doc-check:active {
+  transform: scale(0.92);
+}
+/* =========================================
+   MOBILE DOCUMENT CHECKBOX
+   ========================================= */
+
+.mobile-doc-check {
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  min-height: 26px;
+
+  padding: 0;
+  margin: 0;
+
+  border: 1.5px solid #b8bdc9;
+  border-radius: 6px;
+
+  background: #ffffff;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  cursor: pointer;
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.12s ease;
+}
+
+
+/* No tick before selection */
+
+.mobile-doc-check .checkmark {
+  display: none;
+}
+
+
+/* Selected */
+
+.mobile-doc-check.selected {
+  background: #6d4aff;
+  border-color: #6d4aff;
+}
+
+
+/* Tick appears after selection */
+
+.mobile-doc-check.selected .checkmark {
+  display: block;
+
+  color: #ffffff;
+
+  font-size: 17px;
+  font-weight: 700;
+
+  line-height: 1;
+}
+
+
+/* Selected document card */
+
+.mobile-history-item.selected {
+  border-color: #6d4aff;
+  background: #f7f4ff;
+}
+
+
+/* Small touch feedback */
+
+.mobile-doc-check:active {
+  transform: scale(0.92);
+}

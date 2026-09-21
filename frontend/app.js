@@ -1258,6 +1258,37 @@ function startMulti() {
   $('active-indicator').textContent =
     `⚡ ${ids.length} docs`;
 
+  const mobileSelectedDocs =
+    $('mobile-selected-documents');
+
+  if (mobileSelectedDocs) {
+
+    mobileSelectedDocs.innerHTML =
+      ids.map(id => {
+
+        const doc =
+          S.docs.find(d => d.id === id);
+
+        return `
+        <div class="mobile-active-doc">
+          <span class="mobile-active-doc-icon">
+            📄
+          </span>
+
+          <span>
+            ${esc(
+          doc?.originalName ||
+          'Document'
+        )}
+          </span>
+        </div>
+      `;
+
+      }).join('');
+
+    mobileSelectedDocs.hidden = false;
+  }
+
 
   /* -----------------------------------------
      Show chat workspace
@@ -5222,6 +5253,7 @@ async function showMobileDocuments() {
     behavior: 'smooth'
   });
 }
+
 function renderMobileDocuments() {
 
   const list = $('mobile-documents-list');
@@ -5232,10 +5264,19 @@ function renderMobileDocuments() {
   }
 
   /* ---------------------------------------------
-     Clear current list
+     Clear existing documents
   --------------------------------------------- */
 
   list.innerHTML = '';
+
+
+  /* ---------------------------------------------
+     Make sure selectedIds exists
+  --------------------------------------------- */
+
+  if (!S.selectedIds) {
+    S.selectedIds = new Set();
+  }
 
 
   /* ---------------------------------------------
@@ -5270,6 +5311,16 @@ function renderMobileDocuments() {
 
 
   /* ---------------------------------------------
+     Check whether we are in multi-select mode
+  --------------------------------------------- */
+
+  const multiSelectMode =
+    document.body.classList.contains(
+      'mobile-multi-select'
+    );
+
+
+  /* ---------------------------------------------
      Render every document
   --------------------------------------------- */
 
@@ -5288,13 +5339,14 @@ function renderMobileDocuments() {
 
 
     /* -------------------------------------------
-       Restore selected state
+       Current selection state
     ------------------------------------------- */
 
-    if (
-      S.selectedIds &&
-      S.selectedIds.has(doc.id)
-    ) {
+    const selected =
+      S.selectedIds.has(doc.id);
+
+
+    if (selected) {
 
       item.classList.add(
         'selected'
@@ -5313,15 +5365,19 @@ function renderMobileDocuments() {
 
       <button
         type="button"
-        class="mobile-doc-check"
-        aria-label="Select document"
-        aria-pressed="${S.selectedIds &&
-        S.selectedIds.has(doc.id)
+        class="mobile-doc-check ${selected ? 'selected' : ''}"
+        aria-label="${selected
+        ? 'Deselect document'
+        : 'Select document'
+      }"
+        aria-pressed="${selected
         ? 'true'
         : 'false'
       }"
       >
-        <span>✓</span>
+
+        <span class="checkmark">✓</span>
+
       </button>
 
 
@@ -5370,7 +5426,7 @@ function renderMobileDocuments() {
 
     /* -------------------------------------------
        Checkbox
-       ------------------------------------------- */
+    ------------------------------------------- */
 
     const check =
       item.querySelector(
@@ -5383,22 +5439,23 @@ function renderMobileDocuments() {
       check.onclick = (event) => {
 
         /*
-         * VERY IMPORTANT:
-         * Don't let the click reach
-         * the document card.
+         * Prevent the card's onclick
+         * from running as well.
          */
 
         event.preventDefault();
         event.stopPropagation();
 
 
-        /* -------------------------------
-           Select / deselect
-        -------------------------------- */
+        const currentlySelected =
+          S.selectedIds.has(doc.id);
 
-        if (
-          S.selectedIds.has(doc.id)
-        ) {
+
+        /* ---------------------------------------
+           Deselect
+        --------------------------------------- */
+
+        if (currentlySelected) {
 
           S.selectedIds.delete(
             doc.id
@@ -5408,12 +5465,28 @@ function renderMobileDocuments() {
             'selected'
           );
 
+          check.classList.remove(
+            'selected'
+          );
+
+          check.setAttribute(
+            'aria-label',
+            'Select document'
+          );
+
           check.setAttribute(
             'aria-pressed',
             'false'
           );
 
-        } else {
+        }
+
+
+        /* ---------------------------------------
+           Select
+        --------------------------------------- */
+
+        else {
 
           S.selectedIds.add(
             doc.id
@@ -5421,6 +5494,15 @@ function renderMobileDocuments() {
 
           item.classList.add(
             'selected'
+          );
+
+          check.classList.add(
+            'selected'
+          );
+
+          check.setAttribute(
+            'aria-label',
+            'Deselect document'
           );
 
           check.setAttribute(
@@ -5431,9 +5513,11 @@ function renderMobileDocuments() {
         }
 
 
-        /* -------------------------------
-           Update action bar
-        -------------------------------- */
+        /*
+         * Update:
+         * "2 selected"
+         * "⚡ Chat with 2 documents"
+         */
 
         updateMobileMultiActions();
 
@@ -5443,14 +5527,14 @@ function renderMobileDocuments() {
 
 
     /* -------------------------------------------
-       Normal document click
-       ------------------------------------------- */
+       Document card click
+    ------------------------------------------- */
 
     item.onclick = (event) => {
 
       /*
-       * If the user clicked the checkbox,
-       * don't open the document.
+       * If the checkbox was clicked,
+       * its own handler already handled it.
        */
 
       if (
@@ -5464,67 +5548,113 @@ function renderMobileDocuments() {
       }
 
 
-      /*
-       * Normal click:
-       * open this single document.
-       */
+      /* -----------------------------------------
+         MULTI-DOCUMENT MODE
+         ----------------------------------------- */
 
-      openDoc(doc.id);
+      if (multiSelectMode) {
 
-
-      /* -------------------------------
-         Hide document history
-      -------------------------------- */
-
-      const screen =
-        $('mobile-documents-screen');
+        const currentlySelected =
+          S.selectedIds.has(
+            doc.id
+          );
 
 
-      if (screen) {
+        if (currentlySelected) {
 
-        screen.hidden = true;
+          /*
+           * Deselect
+           */
 
-        screen.setAttribute(
-          'aria-hidden',
-          'true'
-        );
+          S.selectedIds.delete(
+            doc.id
+          );
+
+          item.classList.remove(
+            'selected'
+          );
+
+          if (check) {
+
+            check.classList.remove(
+              'selected'
+            );
+
+            check.setAttribute(
+              'aria-label',
+              'Select document'
+            );
+
+            check.setAttribute(
+              'aria-pressed',
+              'false'
+            );
+
+          }
+
+        }
+
+
+        else {
+
+          /*
+           * Select
+           */
+
+          S.selectedIds.add(
+            doc.id
+          );
+
+          item.classList.add(
+            'selected'
+          );
+
+          if (check) {
+
+            check.classList.add(
+              'selected'
+            );
+
+            check.setAttribute(
+              'aria-label',
+              'Deselect document'
+            );
+
+            check.setAttribute(
+              'aria-pressed',
+              'true'
+            );
+
+          }
+
+        }
+
+
+        updateMobileMultiActions();
+
+        return;
 
       }
 
 
-      /* -------------------------------
-         Remove mobile document state
-      -------------------------------- */
+      /* -----------------------------------------
+         NORMAL DOCUMENT HISTORY
+         ----------------------------------------- */
 
-      document.body.classList.remove(
-        'mobile-documents-open'
+      openMobileDocument(
+        doc.id
       );
-
-      document.body.classList.remove(
-        'mobile-multi-select'
-      );
-
-
-      /* -------------------------------
-         Scroll to top
-      -------------------------------- */
-
-      window.scrollTo({
-
-        top: 0,
-
-        behavior: 'smooth'
-
-      });
 
     };
 
 
     /* -------------------------------------------
-       Add card to list
+       Add document card
     ------------------------------------------- */
 
-    list.appendChild(item);
+    list.appendChild(
+      item
+    );
 
   });
 
@@ -5536,7 +5666,6 @@ function renderMobileDocuments() {
   updateMobileMultiActions();
 
 }
-
 function updateMobileDocumentActions() {
 
   const actions = $('mobile-documents-actions');
@@ -5804,30 +5933,63 @@ function updateMobileMultiActions() {
   const count =
     $('mobile-selected-count');
 
+  const chatBtn =
+    $('mobile-chat-selected');
 
   if (!actions || !count) {
     return;
   }
-
 
   const selected =
     S.selectedIds
       ? S.selectedIds.size
       : 0;
 
-
   count.textContent =
     `${selected} selected`;
 
+  /*
+   * Nothing selected
+   */
+  if (selected === 0) {
+
+    actions.hidden = true;
+
+    return;
+  }
 
   /*
-   * Need at least 2 documents
-   * for multi-document chat.
+   * One document selected
    */
+  if (selected === 1) {
 
-  actions.hidden =
-    selected < 2;
+    actions.hidden = false;
 
+    if (chatBtn) {
+
+      chatBtn.disabled = false;
+
+      chatBtn.textContent =
+        '💬 Chat with this document';
+
+    }
+
+    return;
+  }
+
+  /*
+   * Two or more documents selected
+   */
+  actions.hidden = false;
+
+  if (chatBtn) {
+
+    chatBtn.disabled = false;
+
+    chatBtn.textContent =
+      `⚡ Chat with ${selected} documents`;
+
+  }
 }
 
 async function openMobileMultiChat() {
