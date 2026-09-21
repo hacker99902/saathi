@@ -5085,19 +5085,40 @@ function closeMobileNav() {
 
 function updateMobileNavigation() {
 
-  /* Mobile menu no longer mirrors desktop tabs. */
-  const docsBtn = $('mobile-documents-btn');
-  const compareBtn = $('mobile-compare-btn');
+  const docsBtn =
+    $('mobile-documents-btn');
+
+  const multiChatBtn =
+    $('mobile-multi-chat-btn');
 
   if (docsBtn) {
-    docsBtn.classList.toggle('active', mobileScreen === 'documents' && !mobileCompareMode);
+
+    docsBtn.classList.toggle(
+      'active',
+      mobileScreen === 'documents' &&
+      !document.body.classList.contains(
+        'mobile-multi-select'
+      )
+    );
+
   }
 
-  if (compareBtn) {
-    compareBtn.classList.toggle('active', mobileScreen === 'documents' && mobileCompareMode);
+  if (multiChatBtn) {
+
+    multiChatBtn.classList.toggle(
+      'active',
+      document.body.classList.contains(
+        'mobile-multi-select'
+      )
+    );
+
   }
 
-  /* Show Back whenever we are inside document history or a document workspace. */
+  /*
+   * Back button:
+   * show it inside Document History
+   * or inside a document workspace.
+   */
   const showBack =
     mobileScreen === 'documents' ||
     mobileScreen === 'workspace';
@@ -5107,7 +5128,6 @@ function updateMobileNavigation() {
     showBack
   );
 }
-
 
 function showMobileHome() {
 
@@ -5142,41 +5162,59 @@ function showMobileHome() {
 }
 
 
-function showMobileDocuments(compareMode = false) {
+async function showMobileDocuments() {
 
   mobileScreen = 'documents';
-  mobileCompareMode = compareMode;
+  mobileCompareMode = false;
 
   closeMobileNav();
 
-  /* A new history/compare visit starts with a clean selection. */
+  /* Start with no selected documents */
   S.selectedIds.clear();
   S.multiMode = false;
 
-  showWelcome();
+  const screen =
+    $('mobile-documents-screen');
 
-  const screen = $('mobile-documents-screen');
   if (screen) {
     screen.hidden = false;
-    screen.setAttribute('aria-hidden', 'false');
+
+    screen.setAttribute(
+      'aria-hidden',
+      'false'
+    );
   }
 
-  const title = $('mobile-documents-title');
-  const subtitle = $('mobile-documents-subtitle');
+  const title =
+    $('mobile-documents-title');
+
+  const subtitle =
+    $('mobile-documents-subtitle');
 
   if (title) {
-    title.textContent = compareMode
-      ? 'Compare Documents'
-      : 'Document History';
+    title.textContent =
+      'Document History';
   }
 
   if (subtitle) {
-    subtitle.textContent = compareMode
-      ? 'Select two or more documents to compare them.'
-      : 'Tap a document to chat, or select multiple documents.';
+    subtitle.textContent =
+      'Tap a document to chat, or select multiple documents.';
   }
 
+  /*
+   * IMPORTANT:
+   * Always get the latest documents
+   * before rendering the history screen.
+   */
+  await loadDocs();
+
+  /*
+   * loadDocs() already renders the list,
+   * but render once more to guarantee
+   * the current mobile state is displayed.
+   */
   renderMobileDocuments();
+
   updateMobileNavigation();
 
   window.scrollTo({
@@ -5184,8 +5222,6 @@ function showMobileDocuments(compareMode = false) {
     behavior: 'smooth'
   });
 }
-
-
 function renderMobileDocuments() {
 
   const list = $('mobile-documents-list');
@@ -5551,28 +5587,75 @@ function openMobileDocument(id) {
 
 function openMobileSelectedChat() {
 
-  if (S.selectedIds.size === 0) {
-    return toast('Select at least one document', 'warning');
-  }
+  const count =
+    S.selectedIds.size;
 
-  if (S.selectedIds.size === 1) {
-    openMobileDocument([...S.selectedIds][0]);
+  if (count === 0) {
+
+    toast(
+      'Select at least one document',
+      'warning'
+    );
+
     return;
   }
 
+  /*
+   * One document
+   */
+  if (count === 1) {
+
+    const id =
+      [...S.selectedIds][0];
+
+    document.body.classList.remove(
+      'mobile-multi-select'
+    );
+
+    openMobileDocument(id);
+
+    return;
+  }
+
+  /*
+   * Multiple documents
+   */
   mobileScreen = 'workspace';
   mobileCompareMode = false;
 
-  const screen = $('mobile-documents-screen');
+  const screen =
+    $('mobile-documents-screen');
+
   if (screen) {
+
     screen.hidden = true;
-    screen.setAttribute('aria-hidden', 'true');
+
+    screen.setAttribute(
+      'aria-hidden',
+      'true'
+    );
+
   }
 
-  startMulti();
-  updateMobileNavigation();
-}
+  document.body.classList.remove(
+    'mobile-multi-select'
+  );
 
+  /*
+   * startMulti() already:
+   * - enables S.multiMode
+   * - sets selected IDs
+   * - opens chat
+   */
+  startMulti();
+
+  updateMobileNavigation();
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+}
 
 function openMobileCompare() {
 
@@ -5747,13 +5830,8 @@ function updateMobileMultiActions() {
 
 }
 
-function openMobileMultiChat() {
+async function openMobileMultiChat() {
 
-  /*
-   * Show Document History
-   * because that is where the user
-   * selects multiple PDFs.
-   */
   const screen =
     $('mobile-documents-screen');
 
@@ -5764,6 +5842,14 @@ function openMobileMultiChat() {
     return;
   }
 
+  mobileScreen = 'documents';
+  mobileCompareMode = false;
+
+  closeMobileNav();
+
+  /*
+   * Open document selection screen.
+   */
   screen.hidden = false;
 
   screen.setAttribute(
@@ -5772,37 +5858,56 @@ function openMobileMultiChat() {
   );
 
   /*
-   * Make sure latest documents
-   * are displayed.
+   * Multi-document selection starts fresh.
    */
-  renderMobileDocuments();
+  S.selectedIds.clear();
+  S.multiMode = false;
 
   /*
-   * Tell the screen that we are
-   * selecting multiple documents.
+   * Change heading.
+   */
+  const title =
+    $('mobile-documents-title');
+
+  const subtitle =
+    $('mobile-documents-subtitle');
+
+  if (title) {
+    title.textContent =
+      'Multi-Document Chat';
+  }
+
+  if (subtitle) {
+    subtitle.textContent =
+      'Select two or more documents to chat with them together.';
+  }
+
+  /*
+   * Tell CSS/UI that we are selecting documents.
    */
   document.body.classList.add(
     'mobile-multi-select'
   );
 
   /*
-   * Clear previous selections.
+   * IMPORTANT:
+   * Reload latest documents.
    */
-  S.selectedIds.clear();
+  await loadDocs();
 
   /*
-   * Update selection UI.
+   * Render them after loading.
    */
   renderMobileDocuments();
 
   updateMobileMultiActions();
+  updateMobileNavigation();
 
   window.scrollTo({
     top: 0,
     behavior: 'smooth'
   });
 }
-
 /* =========================================================
    MOBILE NAV INITIALIZATION
    ========================================================= */
@@ -5830,7 +5935,6 @@ function initMobileNavigation() {
     };
 
   }
-  const compareMenuBtn = $('mobile-compare-btn');
   const logoutBtn = $('mobile-logout-btn');
 
 
@@ -5863,12 +5967,15 @@ function initMobileNavigation() {
   /* Documents / library */
 
   if (documentsBtn) {
-    documentsBtn.onclick = () => showMobileDocuments(false);
+
+    documentsBtn.onclick = () => {
+
+      showMobileDocuments();
+
+    };
+
   }
 
-  if (compareMenuBtn) {
-    compareMenuBtn.onclick = () => showMobileDocuments(true);
-  }
 
   const chatSelectedBtn = $('mobile-chat-selected');
   const compareSelectedBtn = $('mobile-compare-selected');
