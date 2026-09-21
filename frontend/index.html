@@ -628,6 +628,7 @@
         <span class="mobile-nav-icon">📂</span>
         <span>Documents</span>
       </button>
+      <div id="mobile-documents-list" class="mobile-documents-list"></div>
     </div>
 
     <div class="mobile-nav-bottom">
@@ -1149,44 +1150,58 @@
         return;
       }
 
-      /*
-       * Keep Maya and Alex side-by-side.
-       */
-      state.maya.position.x = -1.15;
-      state.alex.position.x = 0.9;
-      /*
-       * Close camera for upper-body / half-body framing.
-       */
-      state.camera.position.set(
-        0,
-        1.75,
-        3.5
-      );
+      const mobile = window.innerWidth <= 768;
+      const smallPhone = window.innerWidth <= 420;
 
-      /*
-       * Look around chest/face level.
-       * This crops most of the legs while
-       * keeping the hands visible.
-       */
-      state.camera.lookAt(
-        0,
-        1.75,
-        0
-      );
+      if (mobile) {
+
+        // Keep each character comfortably inside its half
+        state.maya.position.x = -0.58;
+        state.alex.position.x = 0.58;
+
+        // Balanced mobile framing
+        state.camera.position.set(
+          0,
+          1.55,
+          smallPhone ? 5.5 : 5.3
+        );
+
+        state.camera.fov = smallPhone ? 40 : 39;
+
+        state.camera.lookAt(
+          0,
+          1.55,
+          0
+        );
+
+      } else {
+
+        // Desktop — keep your existing framing
+        state.maya.position.x = -1.15;
+        state.alex.position.x = 0.9;
+
+        state.camera.position.set(
+          0,
+          1.75,
+          3.5
+        );
+
+        state.camera.fov = 35;
+
+        state.camera.lookAt(
+          0,
+          1.75,
+          0
+        );
+      }
 
       state.camera.near = 0.1;
       state.camera.far = 100;
 
       state.camera.updateProjectionMatrix();
-
-      resize3D();
-
-      console.log('3D camera positioned for upper-body view');
     }
-    /* =========================================================
-       LOAD CHARACTERS
-    ========================================================= */
 
+    
     function loadCharacters() {
 
       /*

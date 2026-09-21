@@ -741,7 +741,78 @@ function bindEvents() {
 
   $('restart-btn').onclick =
     restartPodcast;
+  const progressBar =
+    document.querySelector('.progress-bar');
 
+  if (progressBar) {
+
+    progressBar.addEventListener(
+      'click',
+      e => {
+
+        if (!S.podSegs.length) {
+          return;
+        }
+
+        const rect =
+          progressBar.getBoundingClientRect();
+
+        const ratio =
+          Math.min(
+            1,
+            Math.max(
+              0,
+              (e.clientX - rect.left) /
+              rect.width
+            )
+          );
+
+        const targetIndex =
+          Math.min(
+            S.podSegs.length - 1,
+            Math.floor(
+              ratio * S.podSegs.length
+            )
+          );
+
+        S.podIdx = targetIndex;
+
+        // Stop current speech
+        speechSynthesis.cancel();
+
+        // Jump to selected segment
+        if (S.podPlaying) {
+
+          S.podPaused = false;
+
+          setTimeout(() => {
+
+            if (S.podPlaying) {
+              playSegment(targetIndex);
+            }
+
+          }, 80);
+
+        } else {
+
+          updatePodcastProgress(
+            targetIndex
+          );
+
+          updatePodcastSpeaker(
+            S.podSegs[targetIndex]
+          );
+
+          highlightTranscript(
+            targetIndex
+          );
+
+        }
+
+      }
+    );
+
+  }
 
   $('dl-script-btn').onclick =
     () =>
@@ -755,32 +826,46 @@ function bindEvents() {
 
     b.onclick = () => {
 
-      $$('.sp-btn').forEach(
-        x =>
-          x.classList.remove(
-            'active'
-          )
-      );
+      const rate = parseFloat(b.dataset.speed);
 
+      if (!Number.isFinite(rate)) {
+        return;
+      }
 
-      b.classList.add(
-        'active'
-      );
+      // Update active button
+      $$('.sp-btn').forEach(x => {
+        x.classList.remove('active');
+      });
 
+      b.classList.add('active');
 
-      const rate =
-        parseFloat(
-          b.dataset.speed
-        );
+      // Save new speed
+      S.podRate = rate;
 
+      // If currently speaking, restart the current segment
+      // using the new speed.
+      if (S.podPlaying) {
 
-      if (
-        Number.isFinite(rate)
-      ) {
+        speechSynthesis.cancel();
 
-        S.podRate = rate;
+        S.podPaused = false;
+
+        updatePlayUI();
+
+        setTimeout(() => {
+
+          if (S.podPlaying) {
+            playSegment(S.podIdx);
+          }
+
+        }, 80);
 
       }
+
+      toast(
+        `Playback speed: ${rate}×`,
+        'success'
+      );
 
     };
 
@@ -864,6 +949,91 @@ async function loadDocs() {
 
 }
 
+function renderMobileDocuments() {
+
+  const list = $('mobile-documents-list');
+
+  if (!list) return;
+
+  if (!S.docs.length) {
+
+    list.innerHTML = `
+      <div class="mobile-document-item">
+        <span class="mobile-document-icon">📂</span>
+        <div>
+          <div class="mobile-document-name">
+            No documents
+          </div>
+          <div class="mobile-document-meta">
+            Upload a document first
+          </div>
+        </div>
+      </div>
+    `;
+
+    return;
+  }
+
+  list.innerHTML = '';
+
+  S.docs.forEach(doc => {
+
+    const item = document.createElement('button');
+
+    item.className =
+      'mobile-document-item' +
+      (doc.id === S.activeDocId ? ' active' : '');
+
+    const ext =
+      (doc.originalName || '')
+        .split('.')
+        .pop()
+        .toUpperCase();
+
+    const icon =
+      ext === 'PDF' ? '📕' : '📄';
+
+    item.innerHTML = `
+      <span class="mobile-document-icon">
+        ${icon}
+      </span>
+
+      <div style="min-width:0;flex:1">
+
+        <div class="mobile-document-name">
+          ${esc(doc.originalName)}
+        </div>
+
+        <div class="mobile-document-meta">
+          ${doc.pageCount || '?'} pages ·
+          ${doc.chunkCount || '?'} chunks
+        </div>
+
+      </div>
+    `;
+
+    item.onclick = () => {
+
+      openDoc(doc.id);
+
+      closeMobileNav();
+
+      const mobileList =
+        $('mobile-documents-list');
+
+      if (mobileList) {
+        mobileList.classList.remove('open');
+      }
+
+      updateMobileNavigation();
+
+    };
+
+    list.appendChild(item);
+
+  });
+
+}
 
 function renderDocs() {
 
@@ -5031,58 +5201,48 @@ function mobileNavigate(tab) {
 
 function mobileGoBack() {
 
-  /*
-   * If we came from another tab,
-   * return there.
-   */
-  if (
-    mobilePreviousTab &&
-    mobilePreviousTab !== S.tab
-  ) {
-
-    const previous = mobilePreviousTab;
-
-    mobilePreviousTab = 'chat';
-
-    switchTab(previous);
-
-    updateMobileNavigation();
-
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-
-    return;
+  // Stop podcast/audio if anything is playing
+  if (typeof stopPod === 'function') {
+    stopPod();
   }
 
+  // Clear the currently opened document
+  S.activeDocId = null;
 
-  /*
-   * Otherwise return to Chat.
-   */
-  if (S.tab !== 'chat') {
-
-    switchTab('chat');
-
-    updateMobileNavigation();
-
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-
-    return;
+  // Clear selected documents
+  if (S.selectedIds) {
+    S.selectedIds.clear();
   }
 
+  S.multiMode = false;
 
-  /*
-   * If already on Chat, return to login.
-   */
-  if (confirm('Leave Saathi and return to the login page?')) {
-    location.href = 'login.html';
+  // Return to the main Chat state
+  S.tab = 'chat';
+
+  // Reset generated panels
+  if (typeof resetPanels === 'function') {
+    resetPanels();
   }
+
+  // IMPORTANT:
+  // Hide workspace and show the real Saathi home page
+  showWelcome();
+
+  // Close mobile drawer if it is open
+  closeMobileNav();
+
+  // Hide Back button
+  document.body.classList.remove('mobile-show-back');
+
+  // Update mobile navigation state
+  updateMobileNavigation();
+
+  // Go to top
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
 }
-
 
 /* =========================================================
    MOBILE USER INFORMATION
@@ -5133,7 +5293,7 @@ function renderMobileUser() {
       (user.lastName?.[0] || '')
     )
       .toUpperCase()
-      ||
+    ||
     user.email?.[0]?.toUpperCase()
     ||
     'U';
@@ -5229,29 +5389,19 @@ function initMobileNavigation() {
 
   });
 
-
   /* Documents */
 
   if (documentsBtn) {
 
     documentsBtn.onclick = () => {
 
-      closeMobileNav();
+      const list = $('mobile-documents-list');
 
-      /*
-       * Keep the current document/workspace visible.
-       * Scroll to the document section in the sidebar.
-       */
-      const docList = $('doc-list');
+      if (!list) return;
 
-      if (docList) {
+      renderMobileDocuments();
 
-        docList.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
-
-      }
+      list.classList.toggle('open');
 
     };
 
@@ -5321,7 +5471,7 @@ function initMobileNavigation() {
 
 const originalSwitchTab = switchTab;
 
-switchTab = function(name) {
+switchTab = function (name) {
 
   originalSwitchTab(name);
 

@@ -4427,3 +4427,809 @@ body {
 #toasts {
     pointer-events: none !important;
 }
+
+/* =========================================================
+   MOBILE DOCUMENT LIST
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+  .mobile-documents-list {
+    display: none;
+    margin: 4px 0 8px;
+    padding: 4px;
+    border-radius: 12px;
+    background: var(--surface, #f5f5f7);
+  }
+
+  .mobile-documents-list.open {
+    display: block;
+  }
+
+  .mobile-document-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    padding: 10px 8px;
+    margin: 2px 0;
+
+    border: 0;
+    border-radius: 9px;
+
+    background: transparent;
+    color: var(--text, #111827);
+
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .mobile-document-item:active {
+    transform: scale(.98);
+  }
+
+  .mobile-document-item.active {
+    background: rgba(109, 93, 252, .12);
+    color: #6d5dfc;
+  }
+
+  .mobile-document-icon {
+    flex: 0 0 24px;
+    text-align: center;
+  }
+
+  .mobile-document-name {
+    min-width: 0;
+    flex: 1;
+
+    font-size: 12px;
+    font-weight: 500;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mobile-document-meta {
+    font-size: 9px;
+    color: var(--text-muted, #6b7280);
+    margin-top: 2px;
+  }
+
+}
+
+@media (max-width: 420px) {
+
+  .mobile-nav {
+    top: 54px !important;
+    height: calc(100dvh - 54px) !important;
+  }
+
+  .mobile-nav-backdrop {
+    top: 54px !important;
+  }
+
+}
+
+@media (max-width: 768px) {
+
+  .podcast-3d-container {
+    width: 100% !important;
+    height: 360px !important;
+    min-height: 360px !important;
+
+    margin: 14px 0 !important;
+
+    border-radius: 16px !important;
+  }
+
+  #podcast-3d-scene {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+}
+
+@media (max-width: 420px) {
+
+  .podcast-3d-container {
+    height: 320px !important;
+    min-height: 320px !important;
+  }
+
+}
+
+/* =========================================================
+   FINAL MOBILE MENU POSITION FIX
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+  .mobile-nav {
+    display: block !important;
+    position: fixed !important;
+
+    top: 58px !important;
+    left: 0 !important;
+
+    width: min(86vw, 320px) !important;
+    height: calc(100dvh - 58px) !important;
+
+    z-index: 10000 !important;
+
+    transform: translateX(-110%) !important;
+    visibility: hidden !important;
+    opacity: 1 !important;
+
+    pointer-events: none !important;
+    overflow-y: auto !important;
+    box-sizing: border-box;
+  }
+
+  body.mobile-nav-open .mobile-nav {
+    display: block !important;
+    transform: translateX(0) !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  .mobile-topbar {
+    z-index: 10001 !important;
+  }
+
+  .mobile-nav-backdrop {
+    position: fixed !important;
+
+    top: 58px !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+
+    z-index: 9999 !important;
+
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  body.mobile-nav-open .mobile-nav-backdrop {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+}
+
+@media (max-width: 420px) {
+
+  .mobile-nav {
+    top: 54px !important;
+    height: calc(100dvh - 54px) !important;
+  }
+
+  .mobile-nav-backdrop {
+    top: 54px !important;
+  }
+}
+
+@media (max-width: 768px) {
+
+  .podcast-3d-container {
+    width: 100% !important;
+    height: 360px !important;
+    min-height: 360px !important;
+    margin: 14px 0 !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+  }
+
+  #podcast-3d-scene {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+}
+
+@media (max-width: 420px) {
+
+  .podcast-3d-container {
+    height: 320px !important;
+    min-height: 320px !important;
+  }
+
+}
+
+@media (max-width: 768px) {
+
+  .mobile-nav {
+    display: block !important;
+    position: fixed !important;
+    top: 58px !important;
+    left: 0 !important;
+    width: min(86vw, 320px) !important;
+    height: calc(100dvh - 58px) !important;
+    z-index: 10000 !important;
+    transform: translateX(-110%) !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    overflow-y: auto !important;
+  }
+
+  body.mobile-nav-open .mobile-nav {
+    display: block !important;
+    transform: translateX(0) !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  .mobile-topbar {
+    z-index: 10001 !important;
+  }
+
+}
+
+#toasts {
+    pointer-events: none !important;
+}
+
+@media (max-width: 768px) {
+
+  .mobile-back-btn {
+    top: 64px !important;
+    left: 12px !important;
+    z-index: 1900 !important;
+  }
+
+  /* Give the document header room for the Back button */
+  .doc-header,
+  .document-header {
+    padding-left: 150px !important;
+  }
+
+}
+
+@media (max-width: 768px) {
+
+  .podcast-3d-container {
+    width: 100% !important;
+    height: 360px !important;
+    min-height: 360px !important;
+
+    border-radius: 20px !important;
+    overflow: hidden !important;
+
+    margin: 16px 0 !important;
+
+    box-sizing: border-box;
+  }
+
+  #podcast-3d-scene {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  #podcast-3d-scene canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+  }
+}
+
+@media (max-width: 420px) {
+
+  .podcast-3d-container {
+    height: 340px !important;
+    min-height: 340px !important;
+    border-radius: 18px !important;
+  }
+}
+
+.speed-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sp-btn {
+  min-width: 52px;
+  min-height: 38px;
+  padding: 8px 12px;
+
+  border: 1px solid #dfe2ef;
+  border-radius: 10px;
+
+  background: #ffffff;
+  color: #4b5563;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+  touch-action: manipulation;
+
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.sp-btn:hover {
+  transform: translateY(-1px);
+}
+
+.sp-btn:active {
+  transform: scale(0.96);
+}
+
+.sp-btn.active {
+  background: #6d5dfc;
+  border-color: #6d5dfc;
+  color: #ffffff;
+}
+
+@media (max-width: 768px) {
+
+  .speed-row {
+    width: 100%;
+    gap: 7px;
+  }
+
+  .sp-btn {
+    flex: 1;
+    min-width: 0;
+    min-height: 40px;
+    padding: 8px 6px;
+  }
+
+}
+@media (max-width: 768px) {
+
+  .podcast-3d-container {
+    border-radius: 18px !important;
+    overflow: hidden !important;
+  }
+
+  #podcast-3d-scene {
+    border-radius: 18px !important;
+    overflow: hidden !important;
+  }
+
+  #podcast-3d-scene canvas {
+    border-radius: 18px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .ws-header {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    margin-left: 8px !important;
+    margin-right: 8px !important;
+    width: calc(100% - 16px) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
+  }
+}
+/* =========================================================
+   SAATHI — CLEAN MOBILE ALIGNMENT OVERRIDE
+   2026-09-21
+   This block intentionally comes LAST so older mobile patches
+   above cannot fight with the final layout.
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  body {
+    min-height: 100dvh;
+  }
+
+  /* ---------- Fixed mobile top bar ---------- */
+  .mobile-topbar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 64px !important;
+    padding: 0 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    z-index: 20000 !important;
+    box-sizing: border-box !important;
+  }
+
+  .mobile-icon-btn {
+    width: 42px !important;
+    height: 42px !important;
+    flex: 0 0 42px !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .mobile-brand {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 9px !important;
+    white-space: nowrap !important;
+  }
+
+  .mobile-brand-logo {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 11px !important;
+    display: grid !important;
+    place-items: center !important;
+  }
+
+  .mobile-brand span {
+    font-size: 19px !important;
+    font-weight: 750 !important;
+  }
+
+  /* ---------- Main mobile canvas ---------- */
+  #app {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 100dvh !important;
+    display: block !important;
+  }
+
+  #main {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    padding-top: 64px !important;
+  }
+
+  /* ---------- Welcome screen ---------- */
+  #welcome.welcome {
+    width: 100% !important;
+    height: calc(100dvh - 64px) !important;
+    min-height: 0 !important;
+    box-sizing: border-box !important;
+    padding: 28px 16px 24px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+  }
+
+  #welcome .welcome-inner {
+    width: min(100%, 390px) !important;
+    max-width: 390px !important;
+    margin: auto !important;
+    text-align: center !important;
+  }
+
+  #welcome .welcome-logo {
+    width: 54px !important;
+    height: 54px !important;
+    margin: 0 auto 14px !important;
+  }
+
+  #welcome .welcome-title {
+    margin: 0 0 10px !important;
+    font-size: clamp(30px, 8.5vw, 36px) !important;
+    line-height: 1.08 !important;
+    letter-spacing: -.04em !important;
+  }
+
+  #welcome .welcome-sub {
+    max-width: 330px !important;
+    margin: 0 auto 22px !important;
+    font-size: 14px !important;
+    line-height: 1.55 !important;
+  }
+
+  #welcome .welcome-grid {
+    width: 100% !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    margin: 0 auto 20px !important;
+  }
+
+  #welcome .wf-card {
+    min-width: 0 !important;
+    min-height: 94px !important;
+    padding: 14px 8px !important;
+    border-radius: 16px !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    font-size: 12px !important;
+  }
+
+  #welcome .wf-card span:first-child {
+    font-size: 22px !important;
+    line-height: 1 !important;
+  }
+
+  #welcome #start-btn {
+    width: min(100%, 250px) !important;
+    min-height: 46px !important;
+    padding: 11px 18px !important;
+    border-radius: 13px !important;
+    margin: 0 auto !important;
+    font-size: 14px !important;
+  }
+
+  /* ---------- Workspace ---------- */
+  #workspace.workspace {
+    width: 100% !important;
+    height: calc(100dvh - 64px) !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Clean two-row mobile document header:
+     document/actions on row 1, tabs on row 2. */
+  #workspace .ws-header {
+    position: relative !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 10px 12px 8px !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-areas:
+      "doc actions"
+      "tabs tabs" !important;
+    align-items: center !important;
+    gap: 8px !important;
+    border-radius: 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+  }
+
+  #workspace .ws-doc-info {
+    grid-area: doc !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 9px !important;
+  }
+
+  #workspace .ws-doc-icon {
+    width: 36px !important;
+    height: 36px !important;
+    flex: 0 0 36px !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 11px !important;
+    font-size: 17px !important;
+  }
+
+  #workspace .ws-doc-info > div {
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+
+  #workspace .ws-doc-name {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    font-size: 13px !important;
+    line-height: 1.3 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  #workspace .ws-doc-meta {
+    display: block !important;
+    margin-top: 2px !important;
+    font-size: 10px !important;
+    line-height: 1.3 !important;
+    white-space: nowrap !important;
+  }
+
+  #workspace .ws-actions {
+    grid-area: actions !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+  }
+
+  #workspace .ws-actions .icon-btn {
+    width: 34px !important;
+    height: 34px !important;
+    flex: 0 0 34px !important;
+    border-radius: 10px !important;
+  }
+
+  #workspace .tab-nav {
+    grid-area: tabs !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    flex: none !important;
+    justify-content: flex-start !important;
+    display: flex !important;
+    gap: 4px !important;
+    padding: 3px !important;
+    border-radius: 12px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+    box-sizing: border-box !important;
+  }
+
+  #workspace .tab-nav::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  #workspace .tab {
+    flex: 0 0 auto !important;
+    min-height: 34px !important;
+    padding: 7px 11px !important;
+    border-radius: 9px !important;
+    font-size: 11px !important;
+    white-space: nowrap !important;
+  }
+
+  /* Back button gets its own clean row above the document header. */
+  .mobile-back-btn {
+    position: fixed !important;
+    top: 72px !important;
+    left: 12px !important;
+    z-index: 19500 !important;
+    min-height: 36px !important;
+    padding: 7px 12px !important;
+    border-radius: 12px !important;
+    display: none !important;
+    align-items: center !important;
+    gap: 5px !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, .08) !important;
+  }
+
+  body.mobile-show-back .mobile-back-btn {
+    display: flex !important;
+  }
+
+  /* When Back is visible, reserve space for it instead of letting it
+     cover the filename. */
+  body.mobile-show-back #workspace .ws-header {
+    padding-top: 54px !important;
+  }
+
+  /* ---------- Chat/content ---------- */
+  #workspace .tab-panel.active {
+    min-height: 0 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  #workspace .chat-wrap {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  #workspace .chat-msgs {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 18px 16px 14px !important;
+    box-sizing: border-box !important;
+  }
+
+  #workspace .chat-input-area {
+    width: 100% !important;
+    padding: 10px 14px 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  #workspace .chat-input-wrap {
+    width: 100% !important;
+    min-width: 0 !important;
+    border-radius: 16px !important;
+    padding: 8px 8px 8px 14px !important;
+  }
+
+  /* Prevent the long filename/helper text from creating horizontal overflow. */
+  #workspace .chat-hint,
+  #workspace .chat-hint * {
+    min-width: 0 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  /* ---------- General mobile cards ---------- */
+  #workspace .panel-body {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 18px 14px 28px !important;
+    box-sizing: border-box !important;
+  }
+
+  #workspace .output-box,
+  #workspace .flashcard,
+  #workspace .exam-q,
+  #workspace .player,
+  #workspace .transcript-body {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .mobile-topbar {
+    height: 60px !important;
+    padding: 0 12px !important;
+  }
+
+  .mobile-icon-btn {
+    width: 40px !important;
+    height: 40px !important;
+    flex-basis: 40px !important;
+  }
+
+  .mobile-brand-logo {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .mobile-brand span {
+    font-size: 18px !important;
+  }
+
+  #main {
+    padding-top: 60px !important;
+  }
+
+  #welcome.welcome {
+    height: calc(100dvh - 60px) !important;
+    padding: 24px 12px 20px !important;
+  }
+
+  #welcome .welcome-grid {
+    gap: 9px !important;
+  }
+
+  #welcome .wf-card {
+    min-height: 88px !important;
+    border-radius: 15px !important;
+    padding: 12px 6px !important;
+  }
+
+  #workspace.workspace {
+    height: calc(100dvh - 60px) !important;
+  }
+
+  .mobile-back-btn {
+    top: 68px !important;
+  }
+
+  body.mobile-show-back #workspace .ws-header {
+    padding-top: 50px !important;
+  }
+}
