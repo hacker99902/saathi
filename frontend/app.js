@@ -477,26 +477,6 @@ function bindEvents() {
   };
 
 
-  /* Mobile navigation */
-  /* Mobile navigation controls */
-  const mobileMenu = $('mobile-menu-btn');
-  const workspaceMenu = $('workspace-menu-btn');
-
-  if (mobileMenu) {
-    mobileMenu.onclick = openMobileNav;
-  }
-
-  if (workspaceMenu) {
-    workspaceMenu.onclick = openMobileNav;
-  }
-
-  $$('.tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (window.innerWidth <= 820) $('sidebar').classList.remove('mobile-open');
-    });
-  });
-
-
   /* Upload */
   $('browse-btn').onclick =
     () => $('file-input').click();
@@ -4623,26 +4603,26 @@ function renderUserBadge() {
 
 
 function showOverlay(n) {
+  const title = $('ov-title');
+  const msg = $('ov-msg');
+  const overlay = $('overlay');
 
-  $('ov-title').textContent =
-    `Processing ${n} file${n > 1 ? 's' : ''}...`;
-
-
-  $('ov-msg').textContent =
-    'Extracting text and building knowledge index';
-
-
-  $('overlay').style.display =
-    'flex';
-
+  if (title) {
+    title.textContent = `Processing ${n} file${n > 1 ? 's' : ''}...`;
+  }
+  if (msg) {
+    msg.textContent = 'Extracting text and building knowledge index';
+  }
+  if (overlay) {
+    overlay.style.display = 'flex';
+  }
 }
 
-
 function hideOverlay() {
-
-  $('overlay').style.display =
-    'none';
-
+  const overlay = $('overlay');
+  if (overlay) {
+    overlay.style.display = 'none';
+  }
 }
 
 
