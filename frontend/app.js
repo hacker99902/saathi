@@ -465,6 +465,9 @@ function showBanner() {
 
 function bindEvents() {
 
+  /* Mobile navigation must initialize first so mobile controls remain usable even if a later desktop-only binding fails. */
+  initMobileNavigation();
+
   /* Theme */
   $('theme-btn').onclick = () => {
 
@@ -477,7 +480,6 @@ function bindEvents() {
   };
 
 
-
   /* Upload */
   $('browse-btn').onclick =
     () => $('file-input').click();
@@ -485,33 +487,6 @@ function bindEvents() {
 
   $('start-btn').onclick =
     () => $('file-input').click();
-
-
-  /* Welcome feature cards */
-  $$('.wf-card').forEach((card, index) => {
-    const tabs = ['chat', 'summary', 'flashcards', 'podcast', 'exam', null];
-    card.setAttribute('role', 'button');
-    card.setAttribute('tabindex', '0');
-    const activate = () => {
-      if (!S.activeDocId) {
-        $('file-input').click();
-        return;
-      }
-      const tab = tabs[index];
-      if (tab) switchTab(tab);
-      else {
-        const docList = $('doc-list');
-        if (docList) docList.scrollIntoView({behavior:'smooth', block:'start'});
-      }
-    };
-    card.onclick = activate;
-    card.onkeydown = e => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        activate();
-      }
-    };
-  });
 
 
   $('file-input').onchange =
@@ -865,7 +840,6 @@ function bindEvents() {
       compareDoc();
 
     };
-    initMobileNavigation();
 
 }
 
