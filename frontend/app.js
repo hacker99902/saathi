@@ -239,6 +239,9 @@ async function boot() {
   await loadDocs();
 
   showUI();
+  if (window.innerWidth <= 768) {
+    showMobileHome();
+  }
 }
 /* ══════════════════════════════════════════════════
    THEME
@@ -465,7 +468,7 @@ function showBanner() {
 
 function bindEvents() {
 
-  /* Mobile navigation must initialize first so mobile controls remain usable even if a later desktop-only binding fails. */
+  /* Initialize mobile controls first so desktop handlers cannot interfere. */
   initMobileNavigation();
 
   /* Theme */
@@ -478,6 +481,7 @@ function bindEvents() {
     );
 
   };
+
 
 
   /* Upload */
@@ -741,78 +745,7 @@ function bindEvents() {
 
   $('restart-btn').onclick =
     restartPodcast;
-  const progressBar =
-    document.querySelector('.progress-bar');
 
-  if (progressBar) {
-
-    progressBar.addEventListener(
-      'click',
-      e => {
-
-        if (!S.podSegs.length) {
-          return;
-        }
-
-        const rect =
-          progressBar.getBoundingClientRect();
-
-        const ratio =
-          Math.min(
-            1,
-            Math.max(
-              0,
-              (e.clientX - rect.left) /
-              rect.width
-            )
-          );
-
-        const targetIndex =
-          Math.min(
-            S.podSegs.length - 1,
-            Math.floor(
-              ratio * S.podSegs.length
-            )
-          );
-
-        S.podIdx = targetIndex;
-
-        // Stop current speech
-        speechSynthesis.cancel();
-
-        // Jump to selected segment
-        if (S.podPlaying) {
-
-          S.podPaused = false;
-
-          setTimeout(() => {
-
-            if (S.podPlaying) {
-              playSegment(targetIndex);
-            }
-
-          }, 80);
-
-        } else {
-
-          updatePodcastProgress(
-            targetIndex
-          );
-
-          updatePodcastSpeaker(
-            S.podSegs[targetIndex]
-          );
-
-          highlightTranscript(
-            targetIndex
-          );
-
-        }
-
-      }
-    );
-
-  }
 
   $('dl-script-btn').onclick =
     () =>
@@ -826,46 +759,32 @@ function bindEvents() {
 
     b.onclick = () => {
 
-      const rate = parseFloat(b.dataset.speed);
-
-      if (!Number.isFinite(rate)) {
-        return;
-      }
-
-      // Update active button
-      $$('.sp-btn').forEach(x => {
-        x.classList.remove('active');
-      });
-
-      b.classList.add('active');
-
-      // Save new speed
-      S.podRate = rate;
-
-      // If currently speaking, restart the current segment
-      // using the new speed.
-      if (S.podPlaying) {
-
-        speechSynthesis.cancel();
-
-        S.podPaused = false;
-
-        updatePlayUI();
-
-        setTimeout(() => {
-
-          if (S.podPlaying) {
-            playSegment(S.podIdx);
-          }
-
-        }, 80);
-
-      }
-
-      toast(
-        `Playback speed: ${rate}×`,
-        'success'
+      $$('.sp-btn').forEach(
+        x =>
+          x.classList.remove(
+            'active'
+          )
       );
+
+
+      b.classList.add(
+        'active'
+      );
+
+
+      const rate =
+        parseFloat(
+          b.dataset.speed
+        );
+
+
+      if (
+        Number.isFinite(rate)
+      ) {
+
+        S.podRate = rate;
+
+      }
 
     };
 
@@ -934,105 +853,22 @@ function bindEvents() {
    ══════════════════════════════════════════════════ */
 
 async function loadDocs() {
-
   try {
+    const d = await GET('/documents');
 
-    const d =
-      await GET('/documents');
+    S.docs = Array.isArray(d.documents)
+      ? d.documents
+      : [];
 
-    S.docs =
-      d.documents || [];
+    console.log('Documents loaded:', S.docs);
 
     renderDocs();
 
-  } catch { }
+    renderMobileDocuments();
 
-}
-
-function renderMobileDocuments() {
-
-  const list = $('mobile-documents-list');
-
-  if (!list) return;
-
-  if (!S.docs.length) {
-
-    list.innerHTML = `
-      <div class="mobile-document-item">
-        <span class="mobile-document-icon">📂</span>
-        <div>
-          <div class="mobile-document-name">
-            No documents
-          </div>
-          <div class="mobile-document-meta">
-            Upload a document first
-          </div>
-        </div>
-      </div>
-    `;
-
-    return;
+  } catch (error) {
+    console.error('Failed to load documents:', error);
   }
-
-  list.innerHTML = '';
-
-  S.docs.forEach(doc => {
-
-    const item = document.createElement('button');
-
-    item.className =
-      'mobile-document-item' +
-      (doc.id === S.activeDocId ? ' active' : '');
-
-    const ext =
-      (doc.originalName || '')
-        .split('.')
-        .pop()
-        .toUpperCase();
-
-    const icon =
-      ext === 'PDF' ? '📕' : '📄';
-
-    item.innerHTML = `
-      <span class="mobile-document-icon">
-        ${icon}
-      </span>
-
-      <div style="min-width:0;flex:1">
-
-        <div class="mobile-document-name">
-          ${esc(doc.originalName)}
-        </div>
-
-        <div class="mobile-document-meta">
-          ${doc.pageCount || '?'} pages ·
-          ${doc.chunkCount || '?'} chunks
-        </div>
-
-      </div>
-    `;
-
-    item.onclick = () => {
-
-      openDoc(doc.id);
-
-      closeMobileNav();
-
-      const mobileList =
-        $('mobile-documents-list');
-
-      if (mobileList) {
-        mobileList.classList.remove('open');
-      }
-
-      updateMobileNavigation();
-
-    };
-
-    list.appendChild(item);
-
-  });
-
 }
 
 function renderDocs() {
@@ -1181,7 +1017,12 @@ function renderDocs() {
 
 
   updateMultiUI();
+
+  if (window.innerWidth <= 768 && mobileScreen === 'documents') {
+    renderMobileDocuments();
+  }
 }
+
 
 
 function toggleSel(id, el) {
@@ -1251,6 +1092,17 @@ function updateMultiUI() {
 
 function openDoc(id) {
 
+  if (window.innerWidth <= 768) {
+    mobileScreen = 'workspace';
+    mobileCompareMode = false;
+
+    const mobileDocsScreen = $('mobile-documents-screen');
+    if (mobileDocsScreen) {
+      mobileDocsScreen.hidden = true;
+      mobileDocsScreen.setAttribute('aria-hidden', 'true');
+    }
+  }
+
   S.activeDocId = id;
 
   S.multiMode = false;
@@ -1309,12 +1161,47 @@ function openDoc(id) {
 
 function startMulti() {
 
-  if (
-    S.selectedIds.size < 2
-  ) {
+  if (S.selectedIds.size < 2) {
+    toast(
+      'Select at least 2 documents',
+      'warning'
+    );
     return;
   }
 
+
+  /* -----------------------------------------
+     Mobile
+  ----------------------------------------- */
+
+  if (window.innerWidth <= 768) {
+
+    mobileScreen = 'workspace';
+
+    const mobileDocsScreen =
+      $('mobile-documents-screen');
+
+    if (mobileDocsScreen) {
+
+      mobileDocsScreen.hidden = true;
+
+      mobileDocsScreen.setAttribute(
+        'aria-hidden',
+        'true'
+      );
+
+    }
+
+    document.body.classList.remove(
+      'mobile-multi-select'
+    );
+
+  }
+
+
+  /* -----------------------------------------
+     Enable multi-document mode
+  ----------------------------------------- */
 
   S.multiMode = true;
 
@@ -1323,18 +1210,37 @@ function startMulti() {
     [...S.selectedIds];
 
 
+  /* First selected document becomes
+     the active document */
+
   S.activeDocId =
     ids[0];
 
 
+  /* -----------------------------------------
+     Get document names
+  ----------------------------------------- */
+
   const names =
-    ids.map(
-      id =>
+    ids.map(id => {
+
+      const doc =
         S.docs.find(
           d => d.id === id
-        )?.originalName || id
-    );
+        );
 
+      return (
+        doc?.originalName ||
+        doc?.name ||
+        id
+      );
+
+    });
+
+
+  /* -----------------------------------------
+     Update workspace header
+  ----------------------------------------- */
 
   $('ws-name').textContent =
     `${ids.length} Documents`;
@@ -1344,12 +1250,18 @@ function startMulti() {
     names
       .join(', ')
       .slice(0, 60) +
-    '...';
+    (names.join(', ').length > 60
+      ? '...'
+      : '');
 
 
   $('active-indicator').textContent =
     `⚡ ${ids.length} docs`;
 
+
+  /* -----------------------------------------
+     Show chat workspace
+  ----------------------------------------- */
 
   showWorkspace();
 
@@ -1358,26 +1270,40 @@ function startMulti() {
   clearChatUI();
 
 
+  /* -----------------------------------------
+     Multi-document welcome message
+  ----------------------------------------- */
+
   const cw =
     $('chat-welcome');
 
 
   if (cw) {
 
-    cw.innerHTML =
-      `<div class="cw-icon">⚡</div>
-       <p>
-         Multi-doc chat active —
-         <strong>${ids.length} documents</strong>
-         selected
-       </p>`;
+    cw.innerHTML = `
+      <div class="cw-icon">
+        ⚡
+      </div>
+
+      <p>
+        Multi-doc chat active —
+        <strong>
+          ${ids.length} documents
+        </strong>
+        selected
+      </p>
+    `;
 
   }
 
 
-  switchTab('chat');
-}
+  /* -----------------------------------------
+     Open Chat
+  ----------------------------------------- */
 
+  switchTab('chat');
+
+}
 
 async function delDoc(id, name) {
 
@@ -5143,6 +5069,8 @@ function dlText(
    ========================================================= */
 
 let mobilePreviousTab = 'chat';
+let mobileScreen = 'home';
+let mobileCompareMode = false;
 
 
 function openMobileNav() {
@@ -5157,92 +5085,547 @@ function closeMobileNav() {
 
 function updateMobileNavigation() {
 
-  // Highlight active navigation item
-  $$('.mobile-nav-item[data-mobile-nav]').forEach(btn => {
+  /* Mobile menu no longer mirrors desktop tabs. */
+  const docsBtn = $('mobile-documents-btn');
+  const compareBtn = $('mobile-compare-btn');
 
-    btn.classList.toggle(
-      'active',
-      btn.dataset.mobileNav === S.tab
-    );
-
-  });
-
-
-  // Show back button except on main chat screen
-  if (S.tab && S.tab !== 'chat') {
-    document.body.classList.add('mobile-show-back');
-  } else {
-    document.body.classList.remove('mobile-show-back');
+  if (docsBtn) {
+    docsBtn.classList.toggle('active', mobileScreen === 'documents' && !mobileCompareMode);
   }
+
+  if (compareBtn) {
+    compareBtn.classList.toggle('active', mobileScreen === 'documents' && mobileCompareMode);
+  }
+
+  /* Show Back whenever we are inside document history or a document workspace. */
+  const showBack =
+    mobileScreen === 'documents' ||
+    mobileScreen === 'workspace';
+
+  document.body.classList.toggle(
+    'mobile-show-back',
+    showBack
+  );
 }
 
 
-function mobileNavigate(tab) {
+function showMobileHome() {
 
-  if (!tab) return;
-
-  if (S.tab !== tab) {
-    mobilePreviousTab = S.tab;
-  }
-
-  switchTab(tab);
-
-  updateMobileNavigation();
+  mobileScreen = 'home';
+  mobileCompareMode = false;
 
   closeMobileNav();
 
-  // Scroll to top on mobile
+  S.activeDocId = null;
+  S.multiMode = false;
+  S.selectedIds.clear();
+
+  if (typeof stopPod === 'function') {
+    stopPod();
+  }
+
+  resetPanels();
+  showWelcome();
+
+  const screen = $('mobile-documents-screen');
+  if (screen) {
+    screen.hidden = true;
+    screen.setAttribute('aria-hidden', 'true');
+  }
+
+  updateMobileNavigation();
+
   window.scrollTo({
     top: 0,
     behavior: 'smooth'
   });
+}
+
+
+function showMobileDocuments(compareMode = false) {
+
+  mobileScreen = 'documents';
+  mobileCompareMode = compareMode;
+
+  closeMobileNav();
+
+  /* A new history/compare visit starts with a clean selection. */
+  S.selectedIds.clear();
+  S.multiMode = false;
+
+  showWelcome();
+
+  const screen = $('mobile-documents-screen');
+  if (screen) {
+    screen.hidden = false;
+    screen.setAttribute('aria-hidden', 'false');
+  }
+
+  const title = $('mobile-documents-title');
+  const subtitle = $('mobile-documents-subtitle');
+
+  if (title) {
+    title.textContent = compareMode
+      ? 'Compare Documents'
+      : 'Document History';
+  }
+
+  if (subtitle) {
+    subtitle.textContent = compareMode
+      ? 'Select two or more documents to compare them.'
+      : 'Tap a document to chat, or select multiple documents.';
+  }
+
+  renderMobileDocuments();
+  updateMobileNavigation();
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+}
+
+
+function renderMobileDocuments() {
+
+  const list = $('mobile-documents-list');
+
+  if (!list) {
+    console.warn('mobile-documents-list not found');
+    return;
+  }
+
+  /* ---------------------------------------------
+     Clear current list
+  --------------------------------------------- */
+
+  list.innerHTML = '';
+
+
+  /* ---------------------------------------------
+     No documents
+  --------------------------------------------- */
+
+  if (
+    !Array.isArray(S.docs) ||
+    S.docs.length === 0
+  ) {
+
+    list.innerHTML = `
+      <div class="mobile-history-empty">
+
+        <div class="mobile-history-empty-icon">
+          📂
+        </div>
+
+        <h3>No documents yet</h3>
+
+        <p>
+          Upload a document to see it here.
+        </p>
+
+      </div>
+    `;
+
+    updateMobileMultiActions();
+
+    return;
+  }
+
+
+  /* ---------------------------------------------
+     Render every document
+  --------------------------------------------- */
+
+  S.docs.forEach(doc => {
+
+    const item =
+      document.createElement('div');
+
+
+    item.className =
+      'mobile-history-item';
+
+
+    item.dataset.id =
+      doc.id;
+
+
+    /* -------------------------------------------
+       Restore selected state
+    ------------------------------------------- */
+
+    if (
+      S.selectedIds &&
+      S.selectedIds.has(doc.id)
+    ) {
+
+      item.classList.add(
+        'selected'
+      );
+
+    }
+
+
+    /* -------------------------------------------
+       Document card
+    ------------------------------------------- */
+
+    item.innerHTML = `
+
+      <!-- Selection checkbox -->
+
+      <button
+        type="button"
+        class="mobile-doc-check"
+        aria-label="Select document"
+        aria-pressed="${S.selectedIds &&
+        S.selectedIds.has(doc.id)
+        ? 'true'
+        : 'false'
+      }"
+      >
+        <span>✓</span>
+      </button>
+
+
+      <!-- Document icon -->
+
+      <div class="mobile-history-icon">
+        📄
+      </div>
+
+
+      <!-- Document information -->
+
+      <div class="mobile-history-info">
+
+        <div class="mobile-history-name">
+          ${esc(
+        doc.originalName ||
+        doc.name ||
+        'Untitled document'
+      )}
+        </div>
+
+        <div class="mobile-history-meta">
+
+          ${doc.pageCount || 0}
+          pages
+
+          ·
+
+          ${doc.chunkCount || 0}
+          chunks
+
+        </div>
+
+      </div>
+
+
+      <!-- Open arrow -->
+
+      <div class="mobile-history-arrow">
+        →
+      </div>
+
+    `;
+
+
+    /* -------------------------------------------
+       Checkbox
+       ------------------------------------------- */
+
+    const check =
+      item.querySelector(
+        '.mobile-doc-check'
+      );
+
+
+    if (check) {
+
+      check.onclick = (event) => {
+
+        /*
+         * VERY IMPORTANT:
+         * Don't let the click reach
+         * the document card.
+         */
+
+        event.preventDefault();
+        event.stopPropagation();
+
+
+        /* -------------------------------
+           Select / deselect
+        -------------------------------- */
+
+        if (
+          S.selectedIds.has(doc.id)
+        ) {
+
+          S.selectedIds.delete(
+            doc.id
+          );
+
+          item.classList.remove(
+            'selected'
+          );
+
+          check.setAttribute(
+            'aria-pressed',
+            'false'
+          );
+
+        } else {
+
+          S.selectedIds.add(
+            doc.id
+          );
+
+          item.classList.add(
+            'selected'
+          );
+
+          check.setAttribute(
+            'aria-pressed',
+            'true'
+          );
+
+        }
+
+
+        /* -------------------------------
+           Update action bar
+        -------------------------------- */
+
+        updateMobileMultiActions();
+
+      };
+
+    }
+
+
+    /* -------------------------------------------
+       Normal document click
+       ------------------------------------------- */
+
+    item.onclick = (event) => {
+
+      /*
+       * If the user clicked the checkbox,
+       * don't open the document.
+       */
+
+      if (
+        event.target.closest(
+          '.mobile-doc-check'
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      /*
+       * Normal click:
+       * open this single document.
+       */
+
+      openDoc(doc.id);
+
+
+      /* -------------------------------
+         Hide document history
+      -------------------------------- */
+
+      const screen =
+        $('mobile-documents-screen');
+
+
+      if (screen) {
+
+        screen.hidden = true;
+
+        screen.setAttribute(
+          'aria-hidden',
+          'true'
+        );
+
+      }
+
+
+      /* -------------------------------
+         Remove mobile document state
+      -------------------------------- */
+
+      document.body.classList.remove(
+        'mobile-documents-open'
+      );
+
+      document.body.classList.remove(
+        'mobile-multi-select'
+      );
+
+
+      /* -------------------------------
+         Scroll to top
+      -------------------------------- */
+
+      window.scrollTo({
+
+        top: 0,
+
+        behavior: 'smooth'
+
+      });
+
+    };
+
+
+    /* -------------------------------------------
+       Add card to list
+    ------------------------------------------- */
+
+    list.appendChild(item);
+
+  });
+
+
+  /* ---------------------------------------------
+     Update multi-document controls
+  --------------------------------------------- */
+
+  updateMobileMultiActions();
+
+}
+
+function updateMobileDocumentActions() {
+
+  const actions = $('mobile-documents-actions');
+  const count = $('mobile-selected-count');
+  const chatBtn = $('mobile-chat-selected');
+  const compareBtn = $('mobile-compare-selected');
+
+  const n = S.selectedIds.size;
+
+  if (count) {
+    count.textContent = `${n} selected`;
+  }
+
+  if (actions) {
+    actions.hidden = n === 0;
+  }
+
+  if (chatBtn) {
+    chatBtn.disabled = n === 0;
+  }
+
+  if (compareBtn) {
+    compareBtn.disabled = n < 2;
+  }
+}
+
+
+function openMobileDocument(id) {
+
+  mobileScreen = 'workspace';
+  mobileCompareMode = false;
+
+  const screen = $('mobile-documents-screen');
+  if (screen) {
+    screen.hidden = true;
+    screen.setAttribute('aria-hidden', 'true');
+  }
+
+  openDoc(id);
+  updateMobileNavigation();
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+}
+
+
+function openMobileSelectedChat() {
+
+  if (S.selectedIds.size === 0) {
+    return toast('Select at least one document', 'warning');
+  }
+
+  if (S.selectedIds.size === 1) {
+    openMobileDocument([...S.selectedIds][0]);
+    return;
+  }
+
+  mobileScreen = 'workspace';
+  mobileCompareMode = false;
+
+  const screen = $('mobile-documents-screen');
+  if (screen) {
+    screen.hidden = true;
+    screen.setAttribute('aria-hidden', 'true');
+  }
+
+  startMulti();
+  updateMobileNavigation();
+}
+
+
+function openMobileCompare() {
+
+  if (S.selectedIds.size < 2) {
+    return toast('Select 2 or more documents', 'warning');
+  }
+
+  mobileScreen = 'workspace';
+  mobileCompareMode = false;
+
+  const screen = $('mobile-documents-screen');
+  if (screen) {
+    screen.hidden = true;
+    screen.setAttribute('aria-hidden', 'true');
+  }
+
+  /* Keep the selected IDs for the existing comparison engine. */
+  startMulti();
+  switchTab('summary');
+  compareDoc();
+  updateMobileNavigation();
+}
+
+
+function mobileNavigate(tab) {
+  /* Kept only for compatibility with any existing callers. */
+  if (!tab) return;
+
+  if (tab === 'chat') {
+    if (S.activeDocId) {
+      mobileScreen = 'workspace';
+      switchTab('chat');
+      closeMobileNav();
+      updateMobileNavigation();
+    } else {
+      showMobileHome();
+    }
+    return;
+  }
+
+  switchTab(tab);
+  mobileScreen = 'workspace';
+  closeMobileNav();
+  updateMobileNavigation();
 }
 
 
 function mobileGoBack() {
 
-  // Stop podcast/audio if anything is playing
-  if (typeof stopPod === 'function') {
-    stopPod();
-  }
-
-  // Clear the currently opened document
-  S.activeDocId = null;
-
-  // Clear selected documents
-  if (S.selectedIds) {
-    S.selectedIds.clear();
-  }
-
-  S.multiMode = false;
-
-  // Return to the main Chat state
-  S.tab = 'chat';
-
-  // Reset generated panels
-  if (typeof resetPanels === 'function') {
-    resetPanels();
-  }
-
-  // IMPORTANT:
-  // Hide workspace and show the real Saathi home page
-  showWelcome();
-
-  // Close mobile drawer if it is open
-  closeMobileNav();
-
-  // Hide Back button
-  document.body.classList.remove('mobile-show-back');
-
-  // Update mobile navigation state
-  updateMobileNavigation();
-
-  // Go to top
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth'
-  });
+  /* From any document/feature screen, return to the clean home screen. */
+  showMobileHome();
 }
+
 
 /* =========================================================
    MOBILE USER INFORMATION
@@ -5330,6 +5713,95 @@ function renderMobileUser() {
   `;
 }
 
+function updateMobileMultiActions() {
+
+  const actions =
+    $('mobile-documents-actions');
+
+  const count =
+    $('mobile-selected-count');
+
+
+  if (!actions || !count) {
+    return;
+  }
+
+
+  const selected =
+    S.selectedIds
+      ? S.selectedIds.size
+      : 0;
+
+
+  count.textContent =
+    `${selected} selected`;
+
+
+  /*
+   * Need at least 2 documents
+   * for multi-document chat.
+   */
+
+  actions.hidden =
+    selected < 2;
+
+}
+
+function openMobileMultiChat() {
+
+  /*
+   * Show Document History
+   * because that is where the user
+   * selects multiple PDFs.
+   */
+  const screen =
+    $('mobile-documents-screen');
+
+  if (!screen) {
+    console.warn(
+      'Mobile document screen not found'
+    );
+    return;
+  }
+
+  screen.hidden = false;
+
+  screen.setAttribute(
+    'aria-hidden',
+    'false'
+  );
+
+  /*
+   * Make sure latest documents
+   * are displayed.
+   */
+  renderMobileDocuments();
+
+  /*
+   * Tell the screen that we are
+   * selecting multiple documents.
+   */
+  document.body.classList.add(
+    'mobile-multi-select'
+  );
+
+  /*
+   * Clear previous selections.
+   */
+  S.selectedIds.clear();
+
+  /*
+   * Update selection UI.
+   */
+  renderMobileDocuments();
+
+  updateMobileMultiActions();
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+}
 
 /* =========================================================
    MOBILE NAV INITIALIZATION
@@ -5346,6 +5818,19 @@ function initMobileNavigation() {
   const themeToggle = $('mobile-theme-toggle');
 
   const documentsBtn = $('mobile-documents-btn');
+  const multiChatBtn = $('mobile-multi-chat-btn');
+  if (multiChatBtn) {
+
+    multiChatBtn.onclick = () => {
+
+      closeMobileNav();
+
+      openMobileMultiChat();
+
+    };
+
+  }
+  const compareMenuBtn = $('mobile-compare-btn');
   const logoutBtn = $('mobile-logout-btn');
 
 
@@ -5375,36 +5860,25 @@ function initMobileNavigation() {
   }
 
 
-  /* Navigation */
-
-  $$('.mobile-nav-item[data-mobile-nav]').forEach(btn => {
-
-    btn.onclick = () => {
-
-      mobileNavigate(
-        btn.dataset.mobileNav
-      );
-
-    };
-
-  });
-
-  /* Documents */
+  /* Documents / library */
 
   if (documentsBtn) {
+    documentsBtn.onclick = () => showMobileDocuments(false);
+  }
 
-    documentsBtn.onclick = () => {
+  if (compareMenuBtn) {
+    compareMenuBtn.onclick = () => showMobileDocuments(true);
+  }
 
-      const list = $('mobile-documents-list');
+  const chatSelectedBtn = $('mobile-chat-selected');
+  const compareSelectedBtn = $('mobile-compare-selected');
 
-      if (!list) return;
+  if (chatSelectedBtn) {
+    chatSelectedBtn.onclick = openMobileSelectedChat;
+  }
 
-      renderMobileDocuments();
-
-      list.classList.toggle('open');
-
-    };
-
+  if (compareSelectedBtn) {
+    compareSelectedBtn.onclick = openMobileCompare;
   }
 
 

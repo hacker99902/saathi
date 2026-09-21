@@ -347,6 +347,10 @@
               <!-- MAYA — TEACHER -->
               <div class="avatar-card maya-avatar" id="maya-avatar">
 
+                <div class="avatar-image-wrap">
+                  <img src="/assets/avatars/saathi-avatars.png" alt="Maya Teacher">
+                </div>
+
                 <div class="avatar-name">
                   <span class="avatar-dot"></span>
                   Maya
@@ -361,6 +365,11 @@
 
               <!-- ALEX — STUDENT -->
               <div class="avatar-card alex-avatar" id="alex-avatar">
+
+                <div class="avatar-image-wrap">
+                  <img src="/assets/avatars/saathi-avatars.png" alt="Alex Student">
+                </div>
+
                 <div class="avatar-name">
                   <span class="avatar-dot"></span>
                   Alex
@@ -593,42 +602,17 @@
     </div>
 
     <div class="mobile-nav-section">
-      <div class="mobile-nav-label">WORKSPACE</div>
-
-      <button class="mobile-nav-item" data-mobile-nav="chat">
-        <span class="mobile-nav-icon">💬</span>
-        <span>Chat</span>
-      </button>
-
-      <button class="mobile-nav-item" data-mobile-nav="summary">
-        <span class="mobile-nav-icon">📝</span>
-        <span>Summary</span>
-      </button>
-
-      <button class="mobile-nav-item" data-mobile-nav="podcast">
-        <span class="mobile-nav-icon">🎙️</span>
-        <span>Teach Me</span>
-      </button>
-
-      <button class="mobile-nav-item" data-mobile-nav="flashcards">
-        <span class="mobile-nav-icon">🃏</span>
-        <span>Flashcards</span>
-      </button>
-
-      <button class="mobile-nav-item" data-mobile-nav="exam">
-        <span class="mobile-nav-icon">🎓</span>
-        <span>Exam</span>
-      </button>
-    </div>
-
-    <div class="mobile-nav-section">
-      <div class="mobile-nav-label">DOCUMENTS</div>
+      <div class="mobile-nav-label">LIBRARY</div>
 
       <button class="mobile-nav-item" id="mobile-documents-btn">
-        <span class="mobile-nav-icon">📂</span>
-        <span>Documents</span>
+        <span class="mobile-nav-icon">📚</span>
+        <span>Document History</span>
       </button>
-      <div id="mobile-documents-list" class="mobile-documents-list"></div>
+
+      <button class="mobile-nav-item" id="mobile-multi-chat-btn">
+        <span class="mobile-nav-icon">💬</span>
+        <span>Multi-Document Chat</span>
+      </button>
     </div>
 
     <div class="mobile-nav-bottom">
@@ -651,6 +635,31 @@
   <button id="mobile-back-btn" class="mobile-back-btn">
     ← <span>Back</span>
   </button>
+
+  <!-- MOBILE DOCUMENT HISTORY -->
+  <section id="mobile-documents-screen" class="mobile-documents-screen" aria-hidden="true" hidden>
+    <div class="mobile-documents-head">
+      <div>
+        <div class="mobile-documents-kicker">LIBRARY</div>
+        <h2 id="mobile-documents-title">Document History</h2>
+        <p id="mobile-documents-subtitle">Open a document to chat, or select multiple documents.</p>
+      </div>
+    </div>
+
+    <div id="mobile-documents-list" class="mobile-documents-list"></div>
+
+    <div id="mobile-documents-actions" class="mobile-documents-actions" hidden>
+
+      <div id="mobile-selected-count" class="mobile-selected-count">
+        0 selected
+      </div>
+
+      <button id="mobile-chat-selected" class="mobile-action-primary">
+        💬 Chat with selected
+      </button>
+
+    </div>
+  </section>
 
   <!-- Upload overlay -->
   <div id="overlay" class="overlay" style="display:none">
@@ -1142,55 +1151,55 @@
 
     function positionCamera() {
 
-      if (
-        !state.camera ||
-        !state.maya ||
-        !state.alex
-      ) {
+      if (!state.camera || !state.maya || !state.alex) {
         return;
       }
 
       const mobile = window.innerWidth <= 768;
-      const smallPhone = window.innerWidth <= 420;
 
+      /*
+       * Keep the characters side-by-side.
+       *
+       * Desktop:
+       *   Maya = left
+       *   Alex = right
+       *
+       * Mobile:
+       *   move them slightly closer together,
+       *   but move the camera farther away
+       *   so neither character gets clipped.
+       */
       if (mobile) {
 
-        // Keep each character comfortably inside its half
-        state.maya.position.x = -0.58;
-        state.alex.position.x = 0.58;
+        state.maya.position.x = -0.70;
+        state.alex.position.x = 0.70;
 
-        // Balanced mobile framing
         state.camera.position.set(
           0,
-          1.55,
-          smallPhone ? 5.5 : 5.3
+          1.65,
+          4.5
         );
-
-        state.camera.fov = smallPhone ? 40 : 39;
 
         state.camera.lookAt(
           0,
-          1.55,
+          1.65,
           0
         );
 
       } else {
 
-        // Desktop — keep your existing framing
-        state.maya.position.x = -1.15;
-        state.alex.position.x = 0.9;
+        state.maya.position.x = -1.05;
+        state.alex.position.x = 1.05;
 
         state.camera.position.set(
           0,
-          1.75,
-          3.5
+          1.65,
+          4.0
         );
-
-        state.camera.fov = 35;
 
         state.camera.lookAt(
           0,
-          1.75,
+          1.65,
           0
         );
       }
@@ -1199,9 +1208,14 @@
       state.camera.far = 100;
 
       state.camera.updateProjectionMatrix();
-    }
 
-    
+      resize3D();
+
+    }
+    /* =========================================================
+       LOAD CHARACTERS
+    ========================================================= */
+
     function loadCharacters() {
 
       /*
@@ -1716,6 +1730,13 @@
 
       setupResizeObserver();
 
+      window.addEventListener('resize', () => {
+
+        if (state.maya && state.alex) {
+          positionCamera();
+        }
+
+      });
 
       /*
        * The Teach Me section may initially
