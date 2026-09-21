@@ -4220,6 +4220,7 @@ body {
 
   /* Keep the desktop sidebar hidden on phones.
      The dedicated mobile drawer is used instead. */
+
   #sidebar,
   body.mobile-nav-open #sidebar {
     transform: translateX(-110%) !important;
@@ -4275,8 +4276,27 @@ body {
     z-index: 5000 !important;
   }
 
+  /* IMPORTANT:
+     The toast container must not block buttons underneath it. */
+
   #toasts {
     z-index: 6000 !important;
+    pointer-events: none !important;
+  }
+
+  #toasts > * {
+    pointer-events: auto;
+  }
+}
+
+@media (max-width: 420px) {
+
+  .mobile-topbar {
+    height: 54px;
+  }
+
+  #welcome {
+    min-height: calc(100dvh - 54px);
   }
 }
 
@@ -4290,4 +4310,120 @@ body {
     min-height: calc(100dvh - 54px);
   }
 
+}
+/* Fix: toast container must not block clicks */
+#toasts {
+  pointer-events: none !important;
+}
+
+#toasts > * {
+  pointer-events: auto;
+}
+
+/* =========================================================
+   FINAL MOBILE MENU FIX
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+  .mobile-nav {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: min(86vw, 320px) !important;
+    height: 100dvh !important;
+
+    z-index: 10000 !important;
+
+    transform: translateX(-110%) !important;
+
+    visibility: hidden !important;
+    opacity: 1 !important;
+
+    pointer-events: none !important;
+  }
+
+  body.mobile-nav-open .mobile-nav {
+    transform: translateX(0) !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  .mobile-nav-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 9999 !important;
+
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  body.mobile-nav-open .mobile-nav-backdrop {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  .mobile-topbar {
+    z-index: 10001 !important;
+  }
+}
+
+/* =========================================================
+   FINAL MOBILE NAVIGATION FIX
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+  .mobile-nav {
+    display: block !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+
+    width: min(86vw, 320px) !important;
+    height: 100dvh !important;
+
+    z-index: 10000 !important;
+
+    transform: translateX(-110%) !important;
+    visibility: hidden !important;
+    opacity: 1 !important;
+
+    pointer-events: none !important;
+  }
+
+  body.mobile-nav-open .mobile-nav {
+    display: block !important;
+    transform: translateX(0) !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  .mobile-nav-backdrop {
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+
+    z-index: 9999 !important;
+
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  body.mobile-nav-open .mobile-nav-backdrop {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  .mobile-topbar {
+    z-index: 10001 !important;
+  }
+}
+#toasts {
+    pointer-events: none !important;
 }
