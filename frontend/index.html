@@ -26,7 +26,7 @@
     }
   </style>
 
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=20260921-mobile-fix5" />
   <style>
     .podcast-3d-container {
       width: 100%;
@@ -559,6 +559,106 @@
       </div><!-- /workspace -->
     </main>
   </div><!-- /app -->
+
+  <!-- MOBILE TOP BAR -->
+  <header class="mobile-topbar">
+    <button id="mobile-menu-btn" class="mobile-icon-btn" aria-label="Open navigation">
+      ☰
+    </button>
+
+    <div class="mobile-brand">
+      <div class="mobile-brand-logo">✦</div>
+      <span>Saathi</span>
+    </div>
+
+    <button id="mobile-theme-btn" class="mobile-icon-btn" aria-label="Toggle theme">
+      🌙
+    </button>
+  </header>
+
+  <!-- MOBILE NAV BACKDROP -->
+  <div id="mobile-nav-backdrop" class="mobile-nav-backdrop"></div>
+
+  <!-- MOBILE NAVIGATION -->
+  <nav id="mobile-nav" class="mobile-nav">
+
+    <div class="mobile-nav-header">
+      <div class="mobile-nav-brand">
+        <div class="mobile-nav-logo">✦</div>
+
+        <div>
+          <strong>Saathi</strong>
+          <span>AI Workspace</span>
+        </div>
+      </div>
+
+      <button id="mobile-close-btn" class="mobile-close-btn">
+        ×
+      </button>
+    </div>
+
+    <div class="mobile-nav-user" id="mobile-nav-user">
+      <!-- User information will be filled by JS -->
+    </div>
+
+    <div class="mobile-nav-section">
+      <div class="mobile-nav-label">WORKSPACE</div>
+
+      <button class="mobile-nav-item" data-mobile-nav="chat">
+        <span class="mobile-nav-icon">💬</span>
+        <span>Chat</span>
+      </button>
+
+      <button class="mobile-nav-item" data-mobile-nav="summary">
+        <span class="mobile-nav-icon">📝</span>
+        <span>Summary</span>
+      </button>
+
+      <button class="mobile-nav-item" data-mobile-nav="podcast">
+        <span class="mobile-nav-icon">🎙️</span>
+        <span>Teach Me</span>
+      </button>
+
+      <button class="mobile-nav-item" data-mobile-nav="flashcards">
+        <span class="mobile-nav-icon">🃏</span>
+        <span>Flashcards</span>
+      </button>
+
+      <button class="mobile-nav-item" data-mobile-nav="exam">
+        <span class="mobile-nav-icon">🎓</span>
+        <span>Exam</span>
+      </button>
+    </div>
+
+    <div class="mobile-nav-section">
+      <div class="mobile-nav-label">DOCUMENTS</div>
+
+      <button class="mobile-nav-item" id="mobile-documents-btn">
+        <span class="mobile-nav-icon">📂</span>
+        <span>Documents</span>
+      </button>
+    </div>
+
+    <div class="mobile-nav-bottom">
+
+      <button class="mobile-nav-item" id="mobile-theme-toggle">
+        <span class="mobile-nav-icon">🌙</span>
+        <span>Dark Mode</span>
+      </button>
+
+      <button class="mobile-nav-item mobile-logout" id="mobile-logout-btn">
+        <span class="mobile-nav-icon">↪</span>
+        <span>Sign Out</span>
+      </button>
+
+    </div>
+
+  </nav>
+
+  <!-- MOBILE BACK BUTTON -->
+  <button id="mobile-back-btn" class="mobile-back-btn">
+    ← <span>Back</span>
+  </button>
 
   <!-- Upload overlay -->
   <div id="overlay" class="overlay" style="display:none">
@@ -1881,109 +1981,7 @@
 
   </script>
 
-  <script src="app.js"></script>
-
-
-<!-- MOBILE TOP BAR -->
-  <header class="mobile-topbar">
-    <button id="mobile-menu-btn" class="mobile-icon-btn" aria-label="Open navigation">
-      ☰
-    </button>
-
-    <div class="mobile-brand">
-      <div class="mobile-brand-logo">✦</div>
-      <span>Saathi</span>
-    </div>
-
-    <button id="mobile-theme-btn" class="mobile-icon-btn" aria-label="Toggle theme">
-      🌙
-    </button>
-  </header>
-
-  <!-- MOBILE NAV BACKDROP -->
-  <div id="mobile-nav-backdrop" class="mobile-nav-backdrop"></div>
-
-  <!-- MOBILE NAVIGATION -->
-  <nav id="mobile-nav" class="mobile-nav">
-
-    <div class="mobile-nav-header">
-      <div class="mobile-nav-brand">
-        <div class="mobile-nav-logo">✦</div>
-
-        <div>
-          <strong>Saathi</strong>
-          <span>AI Workspace</span>
-        </div>
-      </div>
-
-      <button id="mobile-close-btn" class="mobile-close-btn">
-        ×
-      </button>
-    </div>
-
-    <div class="mobile-nav-user" id="mobile-nav-user">
-      <!-- User information will be filled by JS -->
-    </div>
-
-    <div class="mobile-nav-section">
-      <div class="mobile-nav-label">WORKSPACE</div>
-
-      <button class="mobile-nav-item" data-mobile-nav="chat">
-        <span class="mobile-nav-icon">💬</span>
-        <span>Chat</span>
-      </button>
-
-      <button class="mobile-nav-item" data-mobile-nav="summary">
-        <span class="mobile-nav-icon">📝</span>
-        <span>Summary</span>
-      </button>
-
-      <button class="mobile-nav-item" data-mobile-nav="podcast">
-        <span class="mobile-nav-icon">🎙️</span>
-        <span>Teach Me</span>
-      </button>
-
-      <button class="mobile-nav-item" data-mobile-nav="flashcards">
-        <span class="mobile-nav-icon">🃏</span>
-        <span>Flashcards</span>
-      </button>
-
-      <button class="mobile-nav-item" data-mobile-nav="exam">
-        <span class="mobile-nav-icon">🎓</span>
-        <span>Exam</span>
-      </button>
-    </div>
-
-    <div class="mobile-nav-section">
-      <div class="mobile-nav-label">DOCUMENTS</div>
-
-      <button class="mobile-nav-item" id="mobile-documents-btn">
-        <span class="mobile-nav-icon">📂</span>
-        <span>Documents</span>
-      </button>
-    </div>
-
-    <div class="mobile-nav-bottom">
-
-      <button class="mobile-nav-item" id="mobile-theme-toggle">
-        <span class="mobile-nav-icon">🌙</span>
-        <span>Dark Mode</span>
-      </button>
-
-      <button class="mobile-nav-item mobile-logout" id="mobile-logout-btn">
-        <span class="mobile-nav-icon">↪</span>
-        <span>Sign Out</span>
-      </button>
-
-    </div>
-
-  </nav>
-
-  <!-- MOBILE BACK BUTTON -->
-  <button id="mobile-back-btn" class="mobile-back-btn">
-    ← <span>Back</span>
-  </button>
-
+  <script src="app.js?v=20260921-mobile-fix5"></script>
 </body>
 
 </html>

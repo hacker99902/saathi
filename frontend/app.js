@@ -477,6 +477,7 @@ function bindEvents() {
   };
 
 
+
   /* Upload */
   $('browse-btn').onclick =
     () => $('file-input').click();
@@ -484,6 +485,33 @@ function bindEvents() {
 
   $('start-btn').onclick =
     () => $('file-input').click();
+
+
+  /* Welcome feature cards */
+  $$('.wf-card').forEach((card, index) => {
+    const tabs = ['chat', 'summary', 'flashcards', 'podcast', 'exam', null];
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    const activate = () => {
+      if (!S.activeDocId) {
+        $('file-input').click();
+        return;
+      }
+      const tab = tabs[index];
+      if (tab) switchTab(tab);
+      else {
+        const docList = $('doc-list');
+        if (docList) docList.scrollIntoView({behavior:'smooth', block:'start'});
+      }
+    };
+    card.onclick = activate;
+    card.onkeydown = e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        activate();
+      }
+    };
+  });
 
 
   $('file-input').onchange =
@@ -4603,26 +4631,26 @@ function renderUserBadge() {
 
 
 function showOverlay(n) {
-  const title = $('ov-title');
-  const msg = $('ov-msg');
-  const overlay = $('overlay');
 
-  if (title) {
-    title.textContent = `Processing ${n} file${n > 1 ? 's' : ''}...`;
-  }
-  if (msg) {
-    msg.textContent = 'Extracting text and building knowledge index';
-  }
-  if (overlay) {
-    overlay.style.display = 'flex';
-  }
+  $('ov-title').textContent =
+    `Processing ${n} file${n > 1 ? 's' : ''}...`;
+
+
+  $('ov-msg').textContent =
+    'Extracting text and building knowledge index';
+
+
+  $('overlay').style.display =
+    'flex';
+
 }
 
+
 function hideOverlay() {
-  const overlay = $('overlay');
-  if (overlay) {
-    overlay.style.display = 'none';
-  }
+
+  $('overlay').style.display =
+    'none';
+
 }
 
 
