@@ -207,7 +207,7 @@
 
         <!-- Top bar -->
         <div class="ws-header">
-          <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open navigation">☰</button>
+          <button class="mobile-menu-btn" id="workspace-menu-btn" aria-label="Open navigation">☰</button>
           <div class="ws-doc-info">
             <span class="ws-doc-icon">📄</span>
             <div>
@@ -664,18 +664,6 @@
   <button id="mobile-back-btn" class="mobile-back-btn">
     ← <span>Back</span>
   </button>
-
-  <!-- Upload overlay -->
-  <div id="overlay" class="overlay" style="display:none">
-    <div class="overlay-card">
-      <div class="ov-spinner"></div>
-      <h3 id="ov-title">Processing...</h3>
-      <p id="ov-msg">Extracting text and building knowledge index</p>
-    </div>
-  </div>
-
-  <!-- Toast -->
-  <div id="toasts"></div>
 
   <script type="module">
     import * as THREE from 'three';
@@ -1988,5 +1976,4 @@
 
   <script src="app.js"></script>
 </body>
-
 </html>

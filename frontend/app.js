@@ -477,6 +477,25 @@ function bindEvents() {
   };
 
 
+  /* Mobile navigation */
+  /* Mobile navigation controls */
+  const mobileMenu = $('mobile-menu-btn');
+  const workspaceMenu = $('workspace-menu-btn');
+
+  if (mobileMenu) {
+    mobileMenu.onclick = openMobileNav;
+  }
+
+  if (workspaceMenu) {
+    workspaceMenu.onclick = openMobileNav;
+  }
+
+  $$('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (window.innerWidth <= 820) $('sidebar').classList.remove('mobile-open');
+    });
+  });
+
 
   /* Upload */
   $('browse-btn').onclick =
