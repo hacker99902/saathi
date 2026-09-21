@@ -477,6 +477,21 @@ function bindEvents() {
   };
 
 
+  /* Mobile navigation */
+  const mobileMenu = $('mobile-menu-btn');
+  if (mobileMenu) {
+    mobileMenu.onclick = () => {
+      $('sidebar').classList.toggle('mobile-open');
+    };
+  }
+
+  $$('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (window.innerWidth <= 820) $('sidebar').classList.remove('mobile-open');
+    });
+  });
+
+
   /* Upload */
   $('browse-btn').onclick =
     () => $('file-input').click();
