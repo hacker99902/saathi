@@ -477,20 +477,6 @@ function bindEvents() {
   };
 
 
-  /* Mobile navigation */
-  const mobileMenu = $('mobile-menu-btn');
-  if (mobileMenu) {
-    mobileMenu.onclick = () => {
-      $('sidebar').classList.toggle('mobile-open');
-    };
-  }
-
-  $$('.tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (window.innerWidth <= 820) $('sidebar').classList.remove('mobile-open');
-    });
-  });
-
 
   /* Upload */
   $('browse-btn').onclick =
@@ -852,6 +838,7 @@ function bindEvents() {
       compareDoc();
 
     };
+    initMobileNavigation();
 
 }
 
@@ -4980,3 +4967,363 @@ function dlText(
   a.click();
 
 }
+/* =========================================================
+   MOBILE NAVIGATION
+   ========================================================= */
+
+let mobilePreviousTab = 'chat';
+
+
+function openMobileNav() {
+  document.body.classList.add('mobile-nav-open');
+}
+
+
+function closeMobileNav() {
+  document.body.classList.remove('mobile-nav-open');
+}
+
+
+function updateMobileNavigation() {
+
+  // Highlight active navigation item
+  $$('.mobile-nav-item[data-mobile-nav]').forEach(btn => {
+
+    btn.classList.toggle(
+      'active',
+      btn.dataset.mobileNav === S.tab
+    );
+
+  });
+
+
+  // Show back button except on main chat screen
+  if (S.tab && S.tab !== 'chat') {
+    document.body.classList.add('mobile-show-back');
+  } else {
+    document.body.classList.remove('mobile-show-back');
+  }
+}
+
+
+function mobileNavigate(tab) {
+
+  if (!tab) return;
+
+  if (S.tab !== tab) {
+    mobilePreviousTab = S.tab;
+  }
+
+  switchTab(tab);
+
+  updateMobileNavigation();
+
+  closeMobileNav();
+
+  // Scroll to top on mobile
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+}
+
+
+function mobileGoBack() {
+
+  /*
+   * If we came from another tab,
+   * return there.
+   */
+  if (
+    mobilePreviousTab &&
+    mobilePreviousTab !== S.tab
+  ) {
+
+    const previous = mobilePreviousTab;
+
+    mobilePreviousTab = 'chat';
+
+    switchTab(previous);
+
+    updateMobileNavigation();
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+
+    return;
+  }
+
+
+  /*
+   * Otherwise return to Chat.
+   */
+  if (S.tab !== 'chat') {
+
+    switchTab('chat');
+
+    updateMobileNavigation();
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+
+    return;
+  }
+
+
+  /*
+   * If already on Chat, return to login.
+   */
+  if (confirm('Leave Saathi and return to the login page?')) {
+    location.href = 'login.html';
+  }
+}
+
+
+/* =========================================================
+   MOBILE USER INFORMATION
+   ========================================================= */
+
+function renderMobileUser() {
+
+  const box = $('mobile-nav-user');
+
+  if (!box) return;
+
+  let user = null;
+
+  try {
+    user = JSON.parse(
+      localStorage.getItem(UK)
+    );
+  } catch (e) {
+    user = null;
+  }
+
+
+  if (!user) {
+
+    box.innerHTML = `
+      <div class="mobile-user-row">
+        <div class="mobile-user-avatar">U</div>
+
+        <div class="mobile-user-info">
+          <div class="mobile-user-name">
+            Welcome
+          </div>
+
+          <div class="mobile-user-email">
+            Saathi AI
+          </div>
+        </div>
+      </div>
+    `;
+
+    return;
+  }
+
+
+  const initials =
+    (
+      (user.firstName?.[0] || '') +
+      (user.lastName?.[0] || '')
+    )
+      .toUpperCase()
+      ||
+    user.email?.[0]?.toUpperCase()
+    ||
+    'U';
+
+
+  const fullName =
+    (
+      user.firstName +
+      ' ' +
+      (user.lastName || '')
+    ).trim();
+
+
+  box.innerHTML = `
+    <div class="mobile-user-row">
+
+      <div class="mobile-user-avatar">
+        ${esc(initials)}
+      </div>
+
+      <div class="mobile-user-info">
+
+        <div class="mobile-user-name">
+          ${esc(fullName || 'User')}
+        </div>
+
+        <div class="mobile-user-email">
+          ${esc(user.email || '')}
+        </div>
+
+      </div>
+
+    </div>
+  `;
+}
+
+
+/* =========================================================
+   MOBILE NAV INITIALIZATION
+   ========================================================= */
+
+function initMobileNavigation() {
+
+  const menuBtn = $('mobile-menu-btn');
+  const closeBtn = $('mobile-close-btn');
+  const backdrop = $('mobile-nav-backdrop');
+  const backBtn = $('mobile-back-btn');
+
+  const themeBtn = $('mobile-theme-btn');
+  const themeToggle = $('mobile-theme-toggle');
+
+  const documentsBtn = $('mobile-documents-btn');
+  const logoutBtn = $('mobile-logout-btn');
+
+
+  /* Open menu */
+
+  if (menuBtn) {
+    menuBtn.onclick = openMobileNav;
+  }
+
+
+  /* Close menu */
+
+  if (closeBtn) {
+    closeBtn.onclick = closeMobileNav;
+  }
+
+
+  if (backdrop) {
+    backdrop.onclick = closeMobileNav;
+  }
+
+
+  /* Back */
+
+  if (backBtn) {
+    backBtn.onclick = mobileGoBack;
+  }
+
+
+  /* Navigation */
+
+  $$('.mobile-nav-item[data-mobile-nav]').forEach(btn => {
+
+    btn.onclick = () => {
+
+      mobileNavigate(
+        btn.dataset.mobileNav
+      );
+
+    };
+
+  });
+
+
+  /* Documents */
+
+  if (documentsBtn) {
+
+    documentsBtn.onclick = () => {
+
+      closeMobileNav();
+
+      /*
+       * Keep the current document/workspace visible.
+       * Scroll to the document section in the sidebar.
+       */
+      const docList = $('doc-list');
+
+      if (docList) {
+
+        docList.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+
+      }
+
+    };
+
+  }
+
+
+  /* Theme */
+
+  if (themeBtn) {
+
+    themeBtn.onclick = () => {
+
+      const existing = $('theme-btn');
+
+      if (existing) {
+        existing.click();
+      }
+
+    };
+
+  }
+
+
+  if (themeToggle) {
+
+    themeToggle.onclick = () => {
+
+      const existing = $('theme-btn');
+
+      if (existing) {
+        existing.click();
+      }
+
+      closeMobileNav();
+
+    };
+
+  }
+
+
+  /* Sign out */
+
+  if (logoutBtn) {
+
+    logoutBtn.onclick = () => {
+
+      closeMobileNav();
+
+      signOut();
+
+    };
+
+  }
+
+
+  /* User */
+
+  renderMobileUser();
+
+  updateMobileNavigation();
+}
+
+
+/* =========================================================
+   KEEP MOBILE NAV IN SYNC WITH EXISTING TABS
+   ========================================================= */
+
+const originalSwitchTab = switchTab;
+
+switchTab = function(name) {
+
+  originalSwitchTab(name);
+
+  updateMobileNavigation();
+
+};
