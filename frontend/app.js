@@ -60,21 +60,28 @@ let availableVoices = [];
  */
 function loadVoices() {
   if (!('speechSynthesis' in window)) {
-    alert('Speech synthesis is NOT supported on this phone.');
+    alert('Speech synthesis is not supported.');
     return;
   }
 
   availableVoices = speechSynthesis.getVoices();
 
-  console.log('VOICES:', availableVoices);
-
-  if (availableVoices.length > 0) {
-    alert(
-      availableVoices
-        .map((v, i) => `${i + 1}. ${v.name} | ${v.lang}`)
-        .join('\n')
-    );
+  if (!availableVoices.length) {
+    console.log('No voices loaded yet.');
+    return;
   }
+
+  const englishVoices = availableVoices.filter(v =>
+    v.lang && v.lang.toLowerCase().startsWith('en')
+  );
+
+  const text = englishVoices
+    .map((v, i) =>
+      `${i + 1}. ${v.name}\n   LANG: ${v.lang}\n   URI: ${v.voiceURI}\n`
+    )
+    .join('\n');
+
+  alert(text);
 }
 
 loadVoices();
