@@ -59,37 +59,31 @@ let availableVoices = [];
  * so we also listen for "voiceschanged".
  */
 function loadVoices() {
-
   if (!('speechSynthesis' in window)) {
-    console.warn('Speech synthesis is not supported.');
+    alert('Speech synthesis is NOT supported on this phone.');
     return;
   }
 
   availableVoices = speechSynthesis.getVoices();
-  console.table(
-    availableVoices.map(v => ({
-      name: v.name,
-      lang: v.lang,
-      uri: v.voiceURI,
-      local: v.localService
-    }))
-  );
 
-  console.log(
-    'Available browser voices:',
-    availableVoices.map(
-      voice => `${voice.name} (${voice.lang})`
-    )
-  );
+  console.log('VOICES:', availableVoices);
+
+  if (availableVoices.length > 0) {
+    alert(
+      availableVoices
+        .map((v, i) => `${i + 1}. ${v.name} | ${v.lang}`)
+        .join('\n')
+    );
+  }
 }
 
-
 loadVoices();
-
 
 if ('speechSynthesis' in window) {
   speechSynthesis.onvoiceschanged = loadVoices;
 }
+
+
 function showAvailableVoices() {
 
   const voices = speechSynthesis.getVoices();
