@@ -66,6 +66,14 @@ function loadVoices() {
   }
 
   availableVoices = speechSynthesis.getVoices();
+  console.table(
+    availableVoices.map(v => ({
+      name: v.name,
+      lang: v.lang,
+      uri: v.voiceURI,
+      local: v.localService
+    }))
+  );
 
   console.log(
     'Available browser voices:',
@@ -82,7 +90,22 @@ loadVoices();
 if ('speechSynthesis' in window) {
   speechSynthesis.onvoiceschanged = loadVoices;
 }
+function showAvailableVoices() {
 
+  const voices = speechSynthesis.getVoices();
+
+  const text = voices
+    .map((v, i) =>
+      `${i + 1}. ${v.name} | ${v.lang}`
+    )
+    .join('\n');
+
+  alert(
+    voices.length
+      ? text
+      : 'No browser voices detected.'
+  );
+}
 
 /*
  * Select a browser voice for Maya or Alex.
