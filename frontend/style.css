@@ -6039,3 +6039,193 @@ body {
 .mobile-doc-check:active {
   transform: scale(0.92);
 }
+/* =========================================================
+   LOGIN PAGE — ALIGNMENT ONLY
+   Keeps the existing design, colors and functionality.
+   ========================================================= */
+
+/* Main login card */
+.login-card {
+    width: min(420px, calc(100vw - 32px));
+    margin: 24px auto;
+    padding: 36px 30px 30px;
+    box-sizing: border-box;
+}
+
+/* Header alignment */
+.login-card h1 {
+    margin: 0 0 8px;
+    text-align: left;
+    line-height: 1.15;
+}
+
+.login-card .subtitle {
+    margin: 0 0 28px;
+    text-align: left;
+}
+
+/* Sign in / Create account tabs */
+.auth-tabs {
+    width: 100%;
+    display: flex;
+    align-items: stretch;
+    margin-bottom: 30px;
+}
+
+.auth-tabs button {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+}
+
+/* Google button */
+.google-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    box-sizing: border-box;
+}
+
+/* Divider */
+.divider {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 28px 0;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+}
+
+/* Form */
+.login-form {
+    width: 100%;
+}
+
+.form-group {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    text-align: left;
+}
+
+/* Password label + forgot password */
+.password-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.password-header label {
+    margin: 0;
+}
+
+.password-header a {
+    white-space: nowrap;
+}
+
+/* Input boxes */
+.input-wrapper {
+    width: 100%;
+    position: relative;
+}
+
+.input-wrapper input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Sign-in button */
+.login-btn {
+    width: 100%;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Bottom create-account text */
+.auth-footer {
+    width: 100%;
+    text-align: center;
+    margin-top: 22px;
+}
+
+/* Prevent horizontal overflow on small screens */
+@media (max-width: 480px) {
+    .login-card {
+        width: calc(100vw - 24px);
+        padding: 30px 20px 24px;
+        margin: 12px auto;
+    }
+
+    .auth-tabs {
+        margin-bottom: 26px;
+    }
+
+    .password-header {
+        align-items: flex-start;
+    }
+}
+
+/* ================================
+   MOBILE LOGIN ALIGNMENT FIX
+   ================================ */
+
+@media (max-width: 600px) {
+
+    html,
+    body {
+        width: 100%;
+        min-width: 100%;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
+
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        box-sizing: border-box;
+    }
+
+    /* Main login container */
+    .login-page,
+    .login-container,
+    .auth-page,
+    .auth-container {
+        width: 100%;
+        min-height: 100vh;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-sizing: border-box;
+    }
+
+    /* Login card */
+    .login-card,
+    .auth-card {
+        width: 100%;
+        max-width: 380px;
+        margin: 0 auto;
+        box-sizing: border-box;
+    }
+}

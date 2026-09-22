@@ -1201,42 +1201,84 @@
       }
     }
 
-    @media (max-width:600px) {
+    @media (max-width: 600px) {
+
+      html,
+      body {
+        width: 100%;
+        min-height: 100%;
+        overflow-x: hidden;
+      }
+
+      /* Keep only the login section on mobile */
       .left {
-        padding: 24px 20px
-      }
-
-      .l-center {
-        padding: 40px 0 25px
-      }
-
-      .l-title {
-        font-size: 39px
-      }
-
-      .l-desc {
-        font-size: 14px
-      }
-
-      .feat {
-        font-size: 13px
+        display: none;
       }
 
       .right {
-        padding: 18px 14px 30px
+        width: 100%;
+        min-height: 100vh;
+        padding: 24px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .box {
+        width: 100%;
+        max-width: 380px;
+        margin: 0 auto;
         padding: 28px 20px 24px;
         border-radius: 20px;
       }
 
       .auth-title {
-        font-size: 25px
+        font-size: 25px;
+      }
+
+      .auth-sub {
+        font-size: 13.5px;
+      }
+
+      .tabs {
+        width: 100%;
+      }
+
+      .tab {
+        min-width: 0;
+      }
+
+      .google-login-container {
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+      }
+
+      .divider {
+        width: 100%;
+      }
+
+      .field {
+        width: 100%;
+      }
+
+      .input-wrap,
+      .inp {
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .btn-sub {
+        width: 100%;
+      }
+
+      .af {
+        width: 100%;
+        text-align: center;
       }
 
       .field-row {
-        grid-template-columns: 1fr
+        grid-template-columns: 1fr;
       }
     }
 
@@ -1248,6 +1290,153 @@
         animation-duration: .01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: .01ms !important;
+      }
+    }
+    /* =====================================================
+   SAATHI LOGIN — MOBILE ALIGNMENT FIX
+   Alignment only. No design/functionality changes.
+   ===================================================== */
+
+    @media screen and (max-width: 600px) {
+
+      html {
+        width: 100%;
+        min-width: 100%;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+      }
+
+      body {
+        width: 100%;
+        min-width: 100%;
+        min-height: 100dvh;
+        margin: 0;
+        padding: 0;
+
+        /* IMPORTANT: remove the desktop grid on mobile */
+        display: block;
+
+        overflow-x: hidden;
+        overflow-y: auto;
+        background: #f7f8fc;
+      }
+
+      /* Hide the marketing/left section on mobile */
+      .left {
+        display: none !important;
+      }
+
+      /* Full-width login area */
+      .right {
+        width: 100%;
+        min-width: 100%;
+        min-height: 100dvh;
+
+        margin: 0;
+        padding: 20px 16px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        box-sizing: border-box;
+      }
+
+      /* Login card */
+      .box {
+        width: 100%;
+        max-width: 380px;
+
+        margin: 0 auto;
+        padding: 28px 20px 24px;
+
+        box-sizing: border-box;
+      }
+
+      /* Make every form element stay inside the card */
+      .tabs,
+      .google-login-container,
+      .divider,
+      .field,
+      .input-wrap,
+      .inp,
+      .btn-sub,
+      .af {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+
+      /* Google iframe/container cannot overflow */
+      .google-login-container {
+        overflow: hidden;
+      }
+
+      .google-login-container>div {
+        max-width: 100% !important;
+      }
+
+      .google-login-container iframe {
+        max-width: 100% !important;
+      }
+
+      /* Sign in / Create account */
+      .tabs {
+        display: flex;
+      }
+
+      .tab {
+        flex: 1;
+        min-width: 0;
+      }
+
+      /* Input fields */
+      .input-wrap {
+        min-width: 0;
+      }
+
+      .inp {
+        min-width: 0;
+      }
+
+      /* Password row */
+      .lbl-row {
+        width: 100%;
+      }
+
+      /* Button */
+      .btn-sub {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Footer */
+      .af {
+        text-align: center;
+      }
+    }
+
+
+    /* Extra-small phones */
+    @media screen and (max-width: 380px) {
+
+      .right {
+        padding: 16px 12px;
+      }
+
+      .box {
+        padding: 25px 16px 22px;
+        border-radius: 18px;
+      }
+
+      .auth-title {
+        font-size: 24px;
+      }
+
+      .auth-sub {
+        font-size: 13px;
       }
     }
   </style>
@@ -1310,13 +1499,17 @@
     </div>
 
     <div class="l-testimonial">
-      <p class="tq">"Saathi helped me digest 40 research papers in one afternoon. The precision and podcast features are
-        genuinely unreal."</p>
+      <p class="tq">
+        "We built Saathi to make working with long documents simpler.
+        After testing its document Q&A, summaries, flashcards, and podcast features,
+        it has become a much more interactive way to learn from PDFs."
+      </p>
+
       <div class="ta">
-        <div class="tav">RK</div>
+        <div class="tav">S</div>
         <div>
-          <div class="tn">Rohan K.</div>
-          <div class="tr">PhD Candidate, IIT Delhi</div>
+          <div class="tn">Saathi Development Team</div>
+          <div class="tr">Project Team</div>
         </div>
       </div>
     </div>
@@ -1587,7 +1780,7 @@
         theme: 'outline',
         size: 'large',
         shape: 'rectangular',
-        width: 380
+        width: Math.min(380, window.innerWidth - 72)
       };
 
       const signIn = document.getElementById('google-login-signin');
