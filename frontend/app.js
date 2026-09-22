@@ -92,90 +92,72 @@ if ('speechSynthesis' in window) {
  * back to another English voice.
  */
 function getVoiceForSpeaker(speaker) {
+  const voices = speechSynthesis.getVoices();
 
-  if (!availableVoices.length) {
-    return null;
-  }
+  if (!voices.length) return null;
 
-  const englishVoices = availableVoices.filter(voice =>
-    voice.lang &&
-    voice.lang.toLowerCase().startsWith('en')
+  const englishVoices = voices.filter(v =>
+    v.lang && v.lang.toLowerCase().startsWith('en')
   );
 
-  if (!englishVoices.length) {
-    return null;
+  if (!englishVoices.length) return null;
+
+  const isMaya = speaker.toLowerCase() === 'maya';
+
+  const femaleKeywords = [
+    'female',
+    'jenny',
+    'zira',
+    'samantha',
+    'aria',
+    'susan',
+    'hazel',
+    'sarah',
+    'libby',
+    'siri'
+  ];
+
+  const maleKeywords = [
+    'male',
+    'david',
+    'mark',
+    'guy',
+    'ryan',
+    'george',
+    'daniel',
+    'james',
+    'alex',
+    'tom',
+    'fred'
+  ];
+
+  const keywords = isMaya ? femaleKeywords : maleKeywords;
+
+  // First try to find a clearly matching voice
+  for (const keyword of keywords) {
+    const voice = englishVoices.find(v => {
+      const text = `${v.name} ${v.voiceURI}`.toLowerCase();
+      return text.includes(keyword);
+    });
+
+    if (voice) return voice;
   }
 
-  const isMaya =
-    String(speaker).toLowerCase() === 'maya';
+  // Second attempt: look specifically at voice URI
+  const genderVoice = englishVoices.find(v => {
+    const text = `${v.name} ${v.voiceURI}`.toLowerCase();
 
-  const preferred = isMaya
-    ? [
-      'jenny',
-      'aria',
-      'zira',
-      'samantha',
-      'hazel',
-      'heera'
-    ]
-    : [
-      'guy',
-      'david',
-      'ryan',
-      'mark',
-      'george'
-    ];
-
-  /*
-   * Prefer natural/neural/online voices.
-   */
-  const naturalVoices = englishVoices.filter(v => {
-    const name = v.name.toLowerCase();
-
-    return (
-      name.includes('natural') ||
-      name.includes('neural') ||
-      name.includes('online')
-    );
+    if (isMaya) {
+      return text.includes('female');
+    } else {
+      return text.includes('male');
+    }
   });
 
-  /*
-   * First try preferred speaker + natural voice.
-   */
-  for (const keyword of preferred) {
+  if (genderVoice) return genderVoice;
 
-    const voice = naturalVoices.find(v =>
-      v.name.toLowerCase().includes(keyword)
-    );
-
-    if (voice) {
-      return voice;
-    }
-  }
-
-  /*
-   * Then try preferred speaker voice.
-   */
-  for (const keyword of preferred) {
-
-    const voice = englishVoices.find(v =>
-      v.name.toLowerCase().includes(keyword)
-    );
-
-    if (voice) {
-      return voice;
-    }
-  }
-
-  /*
-   * Prefer English US/GB/India.
-   */
-  return (
-    englishVoices.find(v =>
-      /^en-(US|GB|IN)$/i.test(v.lang)
-    ) ||
-    englishVoices[0]
-  );
+  // No gender-specific voice available
+  return englishVoices[0];
 }
 
 /* ══════════════════════════════════════════════════
@@ -3106,132 +3088,35 @@ function pause(ms) {
  *
  * Otherwise the normal displayed text is spoken.
  */
-function speakSentence(
-  text,
-  speaker
-) {
+function speakSentence(text, speaker) {
+  return new Promise(resolve => {
 
-  return new Promise(
-    resolve => {
+    const utterance = new SpeechSynthesisUtterance(text);
 
-      if (
-        !('speechSynthesis' in window)
-      ) {
+    const voice = getVoiceForSpeaker(speaker);
 
-        resolve();
-
-        return;
-      }
-
-
-      const cleanText =
-        String(text || '')
-          .trim();
-
-
-      if (!cleanText) {
-
-        resolve();
-
-        return;
-      }
-
-
-      const utterance =
-        new SpeechSynthesisUtterance(
-          cleanText
-        );
-
-
-      const voice =
-        getVoiceForSpeaker(
-          speaker
-        );
-
-
-      if (voice) {
-
-        utterance.voice =
-          voice;
-
-
-        utterance.lang =
-          voice.lang;
-
-      } else {
-
-        utterance.lang =
-          'en-US';
-
-      }
-
-
-      /*
-       * Maya is slightly slower because
-       * she is the teacher.
-       *
-       * Alex is slightly faster and more
-       * conversational.
-       */
-      if (String(speaker).toLowerCase() === 'maya') {
-
-        utterance.rate = 0.91 * S.podRate;
-        utterance.pitch = 1.02;
-
-      } else {
-
-        utterance.rate = 0.96 * S.podRate;
-        utterance.pitch = 1.03;
-
-      }
-
-      utterance.volume = 1;
-
-
-      let finished =
-        false;
-
-
-      const finish =
-        () => {
-
-          if (finished) {
-            return;
-          }
-
-
-          finished = true;
-
-          resolve();
-
-        };
-
-
-      utterance.onend =
-        finish;
-
-
-      utterance.onerror =
-        event => {
-
-          console.warn(
-            'Speech synthesis error:',
-            event
-          );
-
-
-          finish();
-
-        };
-
-
-      speechSynthesis.speak(
-        utterance
-      );
-
+    if (voice) {
+      utterance.voice = voice;
+      utterance.lang = voice.lang;
+    } else {
+      utterance.lang = 'en-US';
     }
-  );
 
+    if (speaker.toLowerCase() === 'maya') {
+      utterance.rate = 0.88 * S.podRate;
+      utterance.pitch = 1.0;
+    } else {
+      utterance.rate = 0.94 * S.podRate;
+      utterance.pitch = 1.05;
+    }
+
+    utterance.volume = 1;
+
+    utterance.onend = resolve;
+    utterance.onerror = resolve;
+
+    speechSynthesis.speak(utterance);
+  });
 }
 
 function sync3DWithSpeaker(segment) {

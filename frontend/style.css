@@ -6229,3 +6229,11 @@ body {
         box-sizing: border-box;
     }
 }
+@media screen and (max-width: 600px) {
+  .chat-hint,
+  .input-hint,
+  .composer-hint,
+  .send-hint {
+    display: none !important;
+  }
+}
