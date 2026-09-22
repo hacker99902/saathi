@@ -92,30 +92,47 @@ if ('speechSynthesis' in window) {
  * back to another English voice.
  */
 function getVoiceForSpeaker(speaker) {
+
   const voices = speechSynthesis.getVoices();
 
-  if (!voices.length) return null;
+  if (!voices.length) {
+    return null;
+  }
 
-  const englishVoices = voices.filter(v =>
-    v.lang && v.lang.toLowerCase().startsWith('en')
+  const englishVoices = voices.filter(voice =>
+    voice.lang &&
+    voice.lang.toLowerCase().startsWith('en')
   );
 
-  if (!englishVoices.length) return null;
+  if (!englishVoices.length) {
+    return null;
+  }
 
-  const isMaya = speaker.toLowerCase() === 'maya';
+  const isMaya =
+    String(speaker).toLowerCase() === 'maya';
+
+
+  // -----------------------------
+  // MAYA
+  // -----------------------------
 
   const femaleKeywords = [
     'female',
-    'jenny',
     'zira',
-    'samantha',
+    'jenny',
     'aria',
-    'susan',
+    'samantha',
     'hazel',
+    'heera',
+    'susan',
     'sarah',
-    'libby',
-    'siri'
+    'libby'
   ];
+
+
+  // -----------------------------
+  // ALEX
+  // -----------------------------
 
   const maleKeywords = [
     'male',
@@ -126,40 +143,73 @@ function getVoiceForSpeaker(speaker) {
     'george',
     'daniel',
     'james',
-    'alex',
     'tom',
     'fred'
   ];
 
-  const keywords = isMaya ? femaleKeywords : maleKeywords;
 
-  // First try to find a clearly matching voice
+  const keywords =
+    isMaya
+      ? femaleKeywords
+      : maleKeywords;
+
+
+  // First: look for an explicitly
+  // matching voice.
   for (const keyword of keywords) {
-    const voice = englishVoices.find(v => {
-      const text = `${v.name} ${v.voiceURI}`.toLowerCase();
+
+    const voice = englishVoices.find(voice => {
+
+      const text =
+        `${voice.name} ${voice.voiceURI}`
+          .toLowerCase();
+
       return text.includes(keyword);
+
     });
 
-    if (voice) return voice;
+    if (voice) {
+      return voice;
+    }
   }
 
-  // Second attempt: look specifically at voice URI
-  const genderVoice = englishVoices.find(v => {
-    const text = `${v.name} ${v.voiceURI}`.toLowerCase();
 
-    if (isMaya) {
-      return text.includes('female');
-    } else {
-      return text.includes('male');
+  // Second: for Alex, avoid voices
+  // that are clearly female.
+  if (!isMaya) {
+
+    const femaleWords = [
+      'female',
+      'zira',
+      'jenny',
+      'aria',
+      'samantha',
+      'hazel',
+      'heera'
+    ];
+
+    const maleCandidate =
+      englishVoices.find(voice => {
+
+        const text =
+          `${voice.name} ${voice.voiceURI}`
+            .toLowerCase();
+
+        return !femaleWords.some(word =>
+          text.includes(word)
+        );
+
+      });
+
+    if (maleCandidate) {
+      return maleCandidate;
     }
-  });
+  }
 
-  if (genderVoice) return genderVoice;
 
-  // No gender-specific voice available
+  // Final fallback
   return englishVoices[0];
 }
-
 /* ══════════════════════════════════════════════════
    BOOT
    ══════════════════════════════════════════════════ */
@@ -3098,16 +3148,28 @@ function speakSentence(text, speaker) {
     if (voice) {
       utterance.voice = voice;
       utterance.lang = voice.lang;
+
+      console.log(
+        `${speaker} is using voice: ${voice.name} (${voice.lang})`
+      );
     } else {
       utterance.lang = 'en-US';
+
+      console.warn(
+        `No specific voice found for ${speaker}`
+      );
     }
 
+    // Maya = slightly slower and warmer
     if (speaker.toLowerCase() === 'maya') {
       utterance.rate = 0.88 * S.podRate;
-      utterance.pitch = 1.0;
-    } else {
+      utterance.pitch = 1.02;
+    }
+
+    // Alex = slightly faster and lower
+    else {
       utterance.rate = 0.94 * S.podRate;
-      utterance.pitch = 1.05;
+      utterance.pitch = 0.82;
     }
 
     utterance.volume = 1;
