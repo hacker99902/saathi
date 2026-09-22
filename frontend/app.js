@@ -3167,33 +3167,50 @@ function speakSentence(text, speaker) {
 
     const utterance = new SpeechSynthesisUtterance(text);
 
-    const voice = getVoiceForSpeaker(speaker);
+    const isMaya =
+      speaker.toLowerCase() === 'maya';
+
+    const voices = speechSynthesis.getVoices();
+
+    const englishVoices = voices.filter(v =>
+      v.lang &&
+      v.lang.toLowerCase().startsWith('en')
+    );
+
+    let voice = null;
+
+    if (isMaya) {
+
+      // Maya
+      voice =
+        englishVoices.find(v => v.lang === 'en-IN') ||
+        englishVoices.find(v => v.lang === 'en-GB') ||
+        englishVoices[0];
+
+      utterance.rate = 0.88 * S.podRate;
+      utterance.pitch = 1.08;
+
+    } else {
+
+      // Alex
+      voice =
+        englishVoices.find(v => v.lang === 'en-US') ||
+        englishVoices.find(v => v.lang === 'en-AU') ||
+        englishVoices[0];
+
+      utterance.rate = 0.96 * S.podRate;
+
+      // Lower pitch to create a deeper male-like character
+      utterance.pitch = 0.65;
+    }
 
     if (voice) {
       utterance.voice = voice;
       utterance.lang = voice.lang;
 
       console.log(
-        `${speaker} is using voice: ${voice.name} (${voice.lang})`
+        `${speaker} → ${voice.name} | ${voice.lang} | pitch ${utterance.pitch}`
       );
-    } else {
-      utterance.lang = 'en-US';
-
-      console.warn(
-        `No specific voice found for ${speaker}`
-      );
-    }
-
-    // Maya = slightly slower and warmer
-    if (speaker.toLowerCase() === 'maya') {
-      utterance.rate = 0.88 * S.podRate;
-      utterance.pitch = 1.02;
-    }
-
-    // Alex = slightly faster and lower
-    else {
-      utterance.rate = 0.94 * S.podRate;
-      utterance.pitch = 0.82;
     }
 
     utterance.volume = 1;
