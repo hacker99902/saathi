@@ -80,8 +80,7 @@ function loadVoices() {
       `${i + 1}. ${v.name}\n   LANG: ${v.lang}\n   URI: ${v.voiceURI}\n`
     )
     .join('\n');
-
-  alert(text);
+    console.log(text);
 }
 
 loadVoices();
@@ -101,11 +100,11 @@ function showAvailableVoices() {
     )
     .join('\n');
 
-  alert(
-    voices.length
-      ? text
-      : 'No browser voices detected.'
-  );
+  console.log(
+  voices.length
+    ? text
+    : 'No browser voices detected.'
+);
 }
 
 /*
