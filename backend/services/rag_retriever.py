@@ -1,14 +1,8 @@
-﻿
-from typing import List, Dict
+﻿from typing import List, Dict
 
 from backend.services.pdf_service import extract_text_from_pdf
 from backend.services.chunker import chunk_document
-from backend.services.embedding_service import (
-    generate_embedding,
-    generate_embeddings
-)
-from backend.services.document_store import DocumentStore
-from backend.services.vector_store import VectorStore
+from backend.services.qdrant_vector_store import QdrantVectorStore
 from backend.services.text_utils import normalize_query
 from backend.services.keyword_retriever import KeywordRetriever
 
@@ -23,8 +17,6 @@ class RAGRetriever:
         self.embedding_dimension = embedding_dimension
         self.batch_size = batch_size
 
-        self.document_store = DocumentStore()
-
     # ==================================================
     # PROCESS PDF
     # ==================================================
@@ -35,16 +27,10 @@ class RAGRetriever:
         document_id: str
     ) -> Dict:
 
-        # 1. Extract text from PDF
-        extracted = extract_text_from_pdf(
-            file_path
-        )
+        extracted = extract_text_from_pdf(file_path)
 
-        pages = extracted["pages"]
-
-        # 2. Split document into chunks
         chunks = chunk_document(
-            pages=pages,
+            pages=extracted["pages"],
             chunk_size=500,
             overlap=60
         )
@@ -54,34 +40,9 @@ class RAGRetriever:
                 "No text chunks were created from the PDF."
             )
 
-        # 3. Get chunk text
-        texts = [
-            chunk["text"]
-            for chunk in chunks
-        ]
-
-        # 4. Generate embeddings
-        embeddings = generate_embeddings(
-            texts=texts,
-            batch_size=self.batch_size
-        )
-
-        # 5. Create FAISS vector store
-        vector_store = VectorStore(
-            dimension=self.embedding_dimension
-        )
-
-        # 6. Add embeddings + chunks
-        vector_store.add(
-            embeddings=embeddings,
-            chunks=chunks
-        )
-
-        # 7. Persist document
-        self.document_store.save_document(
-            document_id=document_id,
-            vector_store=vector_store
-        )
+        # Qdrant generates embeddings remotely.
+        vector_store = QdrantVectorStore(document_id)
+        vector_store.add(chunks)
 
         return {
             "document_id": document_id,
@@ -97,11 +58,9 @@ class RAGRetriever:
     def load_document(
         self,
         document_id: str
-    ) -> VectorStore:
+    ) -> QdrantVectorStore:
 
-        return self.document_store.load_document(
-            document_id
-        )
+        return QdrantVectorStore(document_id)
 
     # ==================================================
     # SEMANTIC SEARCH
@@ -114,28 +73,14 @@ class RAGRetriever:
         top_k: int = 5
     ) -> List[Dict]:
 
-        # Normalize the query
-        normalized_query = normalize_query(
-            query
-        )
+        normalized_query = normalize_query(query)
 
-        # Convert query into an embedding
-        query_embedding = generate_embedding(
-            normalized_query
-        )
+        vector_store = self.load_document(document_id)
 
-        # Load only the requested document
-        vector_store = self.load_document(
-            document_id
-        )
-
-        # Search FAISS
-        results = vector_store.search(
-            query_embedding=query_embedding,
+        return vector_store.search(
+            query=normalized_query,
             top_k=top_k
         )
-
-        return results
 
     # ==================================================
     # KEYWORD SEARCH - BM25
@@ -148,32 +93,14 @@ class RAGRetriever:
         top_k: int = 5
     ) -> List[Dict]:
 
-        # Load only the requested document
-        vector_store = self.load_document(
-            document_id
-        )
+        vector_store = self.load_document(document_id)
 
-        # Get chunks belonging to this document
-        chunks = vector_store.chunks
-
-        # Create BM25 retriever
         keyword_retriever = KeywordRetriever()
+        keyword_retriever.build_index(vector_store.chunks)
 
-        # Build BM25 index from document chunks
-        keyword_retriever.build_index(
-            chunks
-        )
+        normalized_query = normalize_query(query)
 
-        # Normalize the query
-        normalized_query = normalize_query(
-            query
-        )
-
-        # Perform keyword search
-        results = keyword_retriever.search(
+        return keyword_retriever.search(
             query=normalized_query,
             top_k=top_k
         )
-
-        return results
-

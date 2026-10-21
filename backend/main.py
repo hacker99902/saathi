@@ -2,6 +2,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 import shutil
+from typing import Annotated
 import uuid
 from pydantic import BaseModel, AliasChoices, Field
 from typing import Optional
@@ -26,6 +27,15 @@ app = FastAPI(
     description="AI-powered document intelligence backend",
     version="1.0.0"
 )
+
+@app.get("/debug-upload-schema")
+def debug_upload_schema():
+    schema = app.openapi()
+    return schema["components"]["schemas"].get(
+        "Body_upload_pdf_upload_post",
+        {}
+    )
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -243,26 +253,20 @@ def clear_chat_session(
 # Upload PDF
 # =========================================================
 
+
 @app.post("/upload")
 async def upload_pdf(
-    files: list[UploadFile] = File(
-        ...,
-        description="PDF files to upload",
-        json_schema_extra={
-            "items": {
-                "type": "string",
-                "format": "binary"
-            }
-        }
-    )
+    file: UploadFile = File(..., description="PDF file to upload"),
+    requested_document_id: Optional[str] = None
 ):
+
     uploaded = []
     errors = []
+    files = [file]
 
     for file in files:
         file_path = None
-        document_id = str(uuid.uuid4())
-
+        document_id = requested_document_id or str(uuid.uuid4())
         try:
             if not file.filename:
                 errors.append({
@@ -306,8 +310,29 @@ async def upload_pdf(
             })
 
         except Exception as error:
+            # Remove any vectors created by a partially failed upload.
+            try:
+                if document_id:
+                    retriever.load_document(document_id).delete()
+            except Exception as cleanup_error:
+                print(
+                    f"Qdrant cleanup failed for {document_id}: "
+                    f"{cleanup_error}"
+                )
+
+            # Remove the uploaded PDF if it exists.
             if file_path and file_path.exists():
                 file_path.unlink()
+
+            # Remove metadata if it was already saved.
+            try:
+                if document_id:
+                    metadata_store.delete(document_id)
+            except Exception as cleanup_error:
+                print(
+                    f"Metadata cleanup failed for {document_id}: "
+                    f"{cleanup_error}"
+                )
 
             errors.append({
                 "filename": file.filename or "unknown",
@@ -388,7 +413,7 @@ def delete_document(document_id: str):
 
     try:
         # Delete this document's FAISS data.
-        retriever.document_store.delete_document(document_id)
+        retriever.load_document(document_id).delete()
 
         # Delete this document's metadata.
         metadata_store.delete(document_id)

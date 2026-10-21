@@ -1,11 +1,10 @@
-﻿
+
 fastapi
 uvicorn[standard]
 python-multipart
 python-dotenv
 groq
-sentence-transformers
-faiss-cpu
+qdrant-client
 rank-bm25
 PyMuPDF
 numpy
@@ -14,5 +13,4 @@ bcrypt
 PyJWT
 google-auth
 pypdf
-
 requests

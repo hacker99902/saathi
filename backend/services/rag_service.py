@@ -3,16 +3,12 @@ import numpy as np
 
 from .rag_retriever import RAGRetriever
 
-from .embedding_service import generate_embeddings
-
 from .llm_service import (
     generate_answer_with_history,
     rewrite_question_for_retrieval
 )
 
 from .chat_memory import ChatMemory
-
-from .document_store import DocumentStore
 
 from .text_utils import normalize_query
 
@@ -25,9 +21,6 @@ class RAGService:
 
         # Retriever used for document processing
         self.retriever = RAGRetriever()
-
-        # Persistent document/vector store
-        self.document_store = DocumentStore()
 
         # Conversation memory
         self.chat_memory = ChatMemory(
@@ -119,11 +112,12 @@ class RAGService:
 
 
     def _select_diverse_sources(
-        self,
-        results,
-        max_sources=3,
-        diversity_lambda=0.70
-    ):
+    self,
+    results,
+    max_sources=3,
+    diversity_lambda=0.70
+):
+        """Select the highest-ranked sources without local embeddings."""
         if not results:
             return []
 
@@ -132,80 +126,28 @@ class RAGService:
                 return result["hybrid_score"]
             return result.get("similarity_score", 0.0)
 
-        # Keep candidates within a wider relevance margin.
-        if any("hybrid_score" in result for result in results):
-            best_score = max(
-                relevance_score(result)
-                for result in results
+        ranked_results = sorted(
+            results,
+            key=relevance_score,
+            reverse=True
+        )
+
+        selected = []
+        seen_texts = set()
+
+        for result in ranked_results:
+            normalized_text = " ".join(
+                result["text"].lower().split()
             )
 
-            relevance_margin = 0.15
+            if normalized_text in seen_texts:
+                continue
 
-            results = [
-                result
-                for result in results
-                if relevance_score(result)
-                >= best_score - relevance_margin
-            ]
+            seen_texts.add(normalized_text)
+            selected.append(result)
 
-        if len(results) <= max_sources:
-            return results
-
-        # Generate temporary embeddings.
-        texts = [result["text"] for result in results]
-        embeddings = generate_embeddings(texts)
-
-        for result, embedding in zip(results, embeddings):
-            result["_embedding"] = embedding
-
-        # Select the most relevant source first.
-        first_result = max(results, key=relevance_score)
-        selected = [first_result]
-
-        remaining = [
-            result
-            for result in results
-            if result is not first_result
-        ]
-
-        # Maximal Marginal Relevance (MMR).
-        while remaining and len(selected) < max_sources:
-            best_candidate = None
-            best_mmr_score = float("-inf")
-
-            for candidate in remaining:
-                relevance = relevance_score(candidate)
-                max_redundancy = 0.0
-
-                for selected_result in selected:
-                    similarity = self._cosine_similarity(
-                        candidate["_embedding"],
-                        selected_result["_embedding"]
-                    )
-
-                    max_redundancy = max(
-                        max_redundancy,
-                        similarity
-                    )
-
-                mmr_score = (
-                    diversity_lambda * relevance
-                    - (1 - diversity_lambda) * max_redundancy
-                )
-
-                if mmr_score > best_mmr_score:
-                    best_mmr_score = mmr_score
-                    best_candidate = candidate
-
-            if best_candidate is None:
+            if len(selected) >= max_sources:
                 break
-
-            selected.append(best_candidate)
-            remaining.remove(best_candidate)
-
-        # Remove temporary embeddings from all candidates.
-        for result in results:
-            result.pop("_embedding", None)
 
         return selected
 
@@ -329,10 +271,8 @@ class RAGService:
         # 5. Load document-specific vector store
         # ----------------------------------------------
 
-        vector_store = (
-            self.document_store.load_document(
-                document_id
-            )
+        vector_store = self.retriever.load_document(
+            document_id
         )
         print("\n--- STORED CHUNK ID CHECK ---")
 
@@ -346,34 +286,20 @@ class RAGService:
         print("Missing chunk IDs:", chunk_ids.count(None))
 
         print("-----------------------------")
-
         # ----------------------------------------------
-        # 6. Generate query embedding
-        # ----------------------------------------------
-
-        query_embedding = generate_embeddings(
-            [normalized_query]
-        )[0]
-
-        # ----------------------------------------------
-        # 7. Semantic search - FAISS
+        # 6. Semantic search using Qdrant hosted inference
         # ----------------------------------------------
 
         retrieval_top_k = max(top_k * 4, 20)
 
-        semantic_candidates = (
-            vector_store.search(
-                query_embedding,
-                top_k=retrieval_top_k
-            )
+        semantic_candidates = vector_store.search(
+            query=normalized_query,
+            top_k=retrieval_top_k
         )
 
-        print(
-            "\nFAISS semantic candidates:"
-        )
+        print("\nQdrant semantic candidates:")
 
         for candidate in semantic_candidates:
-
             print(
                 f"Page {candidate['page_number']} "
                 f"| Semantic Score: "
@@ -384,26 +310,15 @@ class RAGService:
         # 8. Keyword search - BM25
         # ----------------------------------------------
 
-        keyword_candidates = (
-            self.retriever.keyword_search(
-                document_id=document_id,
-                query=normalized_query,
-                top_k=retrieval_top_k
-            )
+        keyword_candidates = self.retriever.keyword_search(
+            document_id=document_id,
+            query=normalized_query,
+            top_k=retrieval_top_k
         )
-        print("\n--- PAGE 6 CHUNK COMPARISON ---")
 
-        for result in semantic_candidates + keyword_candidates:
-            if result["page_number"] == 6:
-                print("Chunk ID:", result["chunk_id"])
-                print("Text:", result["text"][:500])
-                print("-" * 50)
-        print(
-            "\nBM25 keyword candidates:"
-        )
+        print("\nBM25 keyword candidates:")
 
         for candidate in keyword_candidates:
-
             print(
                 f"Page {candidate['page_number']} "
                 f"| Keyword Score: "
