@@ -170,13 +170,6 @@ Answer:
 
     # Extract answer
 
-    print("GROQ DEBUG - model:", response.model)
-    print("GROQ DEBUG - choices:", len(response.choices))
-    print("GROQ DEBUG - finish reason:",
-        response.choices[0].finish_reason if response.choices else None)
-    print("GROQ DEBUG - message:",
-        response.choices[0].message.model_dump() if response.choices else None)
-
     answer = response.choices[0].message.content
 
     if not answer:
@@ -350,12 +343,7 @@ ANSWER:
     # ----------------------------------------------
     # Extract answer
 
-    print("GROQ DEBUG - model:", response.model)
-    print("GROQ DEBUG - choices:", len(response.choices))
-    print("GROQ DEBUG - finish reason:",
-        response.choices[0].finish_reason if response.choices else None)
-    print("GROQ DEBUG - message:",
-        response.choices[0].message.model_dump() if response.choices else None)
+    
 
     answer = response.choices[0].message.content
 
