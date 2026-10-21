@@ -245,7 +245,16 @@ def clear_chat_session(
 
 @app.post("/upload")
 async def upload_pdf(
-    files: list[UploadFile] = File(...)
+    files: list[UploadFile] = File(
+        ...,
+        description="PDF files to upload",
+        json_schema_extra={
+            "items": {
+                "type": "string",
+                "format": "binary"
+            }
+        }
+    )
 ):
     uploaded = []
     errors = []
