@@ -165,7 +165,7 @@ Answer:
 
         temperature=0.2,
 
-        max_tokens=500
+        max_tokens=1200
     )
 
     # Extract answer
@@ -341,7 +341,7 @@ ANSWER:
 
         temperature=0.2,
 
-        max_tokens=500
+        max_tokens=1200
     )
 
 
