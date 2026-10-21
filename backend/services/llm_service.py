@@ -168,22 +168,22 @@ Answer:
         max_tokens=500
     )
 
-
-    # ----------------------------------------------
     # Extract answer
-    # ----------------------------------------------
+
+    print("GROQ DEBUG - model:", response.model)
+    print("GROQ DEBUG - choices:", len(response.choices))
+    print("GROQ DEBUG - finish reason:",
+        response.choices[0].finish_reason if response.choices else None)
+    print("GROQ DEBUG - message:",
+        response.choices[0].message.model_dump() if response.choices else None)
 
     answer = response.choices[0].message.content
 
-
     if not answer:
-
-        raise ValueError(
-            "The LLM returned an empty response."
-        )
-
+        raise ValueError("The LLM returned an empty response.")
 
     return answer.strip()
+   
 
 
 # ==================================================
@@ -348,19 +348,22 @@ ANSWER:
     # ----------------------------------------------
     # Extract answer
     # ----------------------------------------------
+    # Extract answer
+
+    print("GROQ DEBUG - model:", response.model)
+    print("GROQ DEBUG - choices:", len(response.choices))
+    print("GROQ DEBUG - finish reason:",
+        response.choices[0].finish_reason if response.choices else None)
+    print("GROQ DEBUG - message:",
+        response.choices[0].message.model_dump() if response.choices else None)
 
     answer = response.choices[0].message.content
 
-
     if not answer:
-
-        raise ValueError(
-            "The LLM returned an empty response."
-        )
-
+        raise ValueError("The LLM returned an empty response.")
 
     return answer.strip()
-
+    
 
 def rewrite_question_for_retrieval(
     question: str,
