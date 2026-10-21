@@ -1,0 +1,16 @@
+﻿
+fastapi
+uvicorn[standard]
+python-multipart
+python-dotenv
+groq
+sentence-transformers
+faiss-cpu
+rank-bm25
+PyMuPDF
+numpy
+supabase
+bcrypt
+PyJWT
+google-auth
+pypdf

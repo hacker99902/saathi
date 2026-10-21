@@ -8,3 +8,30 @@ backend/data/store.json
 *.log
 .DS_Store
 Thumbs.db
+data
+*/.pdf
+
+# Python virtual environments
+venv/
+.venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Test and coverage caches
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local environment secrets
+.env
+.env.*
+!.env.example
+# PDF documents and local backups
+*.pdf
+*.bak
+
+# Local runtime data
+backend/data/
+backend/uploads/
