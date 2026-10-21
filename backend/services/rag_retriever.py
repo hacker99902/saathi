@@ -1,4 +1,4 @@
-
+﻿
 from typing import List, Dict
 
 from backend.services.pdf_service import extract_text_from_pdf
@@ -18,7 +18,7 @@ class RAGRetriever:
     def __init__(
         self,
         embedding_dimension: int = 384,
-        batch_size: int = 32
+        batch_size: int = 4
     ):
         self.embedding_dimension = embedding_dimension
         self.batch_size = batch_size
@@ -176,3 +176,4 @@ class RAGRetriever:
         )
 
         return results
+
