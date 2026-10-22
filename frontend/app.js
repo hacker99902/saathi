@@ -1,13 +1,13 @@
-/* ═══════════════════════════════════════════════════
-   SAATHI AI v2 — Complete Frontend Application
-   ═══════════════════════════════════════════════════ */
+﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   SAATHI AI v2 â€” Complete Frontend Application
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 'use strict';
 
-const API = 'https://saathi-backend-rdli.onrender.com/api';
+const API = 'https://saathi-python-backend.onrender.com';
 const TK = 'saathi_token';
 const UK = 'saathi_user';
 
-/* ── State ──────────────────────────────────────── */
+/* â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const S = {
   docs: [],
   activeDocId: null,
@@ -40,14 +40,14 @@ const S = {
 };
 
 
-/* ── DOM helpers ────────────────────────────────── */
+/* â”€â”€ DOM helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const $ = id => document.getElementById(id);
 const $$ = sel => document.querySelectorAll(sel);
 
 
-/* ══════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    BROWSER VOICES
-   ══════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 let availableVoices = [];
 
@@ -233,9 +233,9 @@ function getVoiceForSpeaker(speaker) {
   // Final fallback
   return englishVoices[0];
 }
-/* ══════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    BOOT
-   ══════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 document.addEventListener('DOMContentLoaded', boot);
 
@@ -244,7 +244,7 @@ async function boot() {
 
   const token = localStorage.getItem(TK);
 
-  // No token → go directly to login
+  // No token â†’ go directly to login
   if (!token) {
     location.replace('login.html');
     return;
@@ -272,7 +272,7 @@ async function boot() {
       JSON.stringify(d.user)
     );
 
-    // Authentication successful → reveal app
+    // Authentication successful â†’ reveal app
     document.body.classList.remove('auth-pending');
     document.body.classList.add('auth-ready');
 
@@ -298,9 +298,9 @@ async function boot() {
     showMobileHome();
   }
 }
-/* ══════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    THEME
-   ══════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 function applyTheme(t) {
 
@@ -320,14 +320,14 @@ function applyTheme(t) {
 
   if (btn) {
     btn.textContent =
-      t === 'dark' ? '☀️' : '🌙';
+      t === 'dark' ? 'â˜€ï¸' : 'ðŸŒ™';
   }
 }
 
 
-/* ══════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    AUTH
-   ══════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 function getToken() {
   return localStorage.getItem(TK);
@@ -374,121 +374,67 @@ function signOut() {
 }
 
 
-/* ══════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    API
-   ══════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+
+async function apiRequest(ep, options = {}) {
+  const headers = {
+    ...authHdr(),
+    ...(options.headers || {})
+  };
+
+  const r = await fetch(API + ep, {
+    ...options,
+    headers
+  });
+
+  if (r.status === 401) {
+    signOut();
+    throw new Error('Session expired. Please sign in again.');
+  }
+
+  const data = await r.json().catch(() => ({}));
+
+  if (!r.ok) {
+    const detail = data.detail;
+    const message =
+      (typeof detail === 'object' && detail !== null
+        ? detail.error || detail.message
+        : detail) ||
+      data.error ||
+      data.message ||
+      r.statusText ||
+      'Request failed';
+
+    throw new Error(message);
+  }
+
+  return data;
+}
 
 async function GET(ep) {
-
-  const r = await fetch(
-    API + ep,
-    {
-      headers: authHdr()
-    }
-  );
-
-
-  if (r.status === 401) {
-
-    signOut();
-
-    throw new Error(
-      'Session expired'
-    );
-  }
-
-
-  if (!r.ok) {
-
-    const e =
-      await r.json().catch(() => ({}));
-
-    throw new Error(
-      e.error || r.statusText
-    );
-  }
-
-
-  return r.json();
+  return apiRequest(ep);
 }
-
 
 async function POST(ep, body) {
-
-  const r = await fetch(
-    API + ep,
-    {
-      method: 'POST',
-      headers: authHdr(),
-      body: JSON.stringify(body)
-    }
-  );
-
-
-  if (r.status === 401) {
-
-    signOut();
-
-    throw new Error(
-      'Session expired'
-    );
-  }
-
-
-  if (!r.ok) {
-
-    const e =
-      await r.json().catch(() => ({}));
-
-    throw new Error(
-      e.error || r.statusText
-    );
-  }
-
-
-  return r.json();
+  return apiRequest(ep, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
 }
-
 
 async function DEL(ep) {
-
-  const r = await fetch(
-    API + ep,
-    {
-      method: 'DELETE',
-      headers: authHdr()
-    }
-  );
-
-
-  if (r.status === 401) {
-
-    signOut();
-
-    throw new Error(
-      'Session expired'
-    );
-  }
-
-
-  if (!r.ok) {
-
-    const e =
-      await r.json().catch(() => ({}));
-
-    throw new Error(
-      e.error || r.statusText
-    );
-  }
-
-
-  return r.json();
+  return apiRequest(ep, {
+    method: 'DELETE'
+  });
 }
 
 
-/* ══════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    SERVER BANNER
-   ══════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 function showBanner() {
 
@@ -507,7 +453,7 @@ function showBanner() {
 
 
   b.innerHTML =
-    '⚠️ Cannot reach backend on port 3001. ' +
+    'âš ï¸ Cannot reach backend on port 3001. ' +
     'Run <code>npm run dev</code> in ' +
     '<code>saathi/backend</code> ' +
     '<button onclick="location.reload()">Retry</button>';
@@ -517,9 +463,9 @@ function showBanner() {
 }
 
 
-/* ══════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    EVENTS
-   ══════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 function bindEvents() {
 
@@ -782,9 +728,9 @@ function bindEvents() {
   );
 
 
-  /* ═══════════════════════════════════════════════
+  /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      PODCAST
-     ═══════════════════════════════════════════════ */
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
   $('gen-pod-btn').onclick =
     genPodcast;
@@ -903,26 +849,34 @@ function bindEvents() {
 }
 
 
-/* ══════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    DOCUMENTS
-   ══════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+
 
 async function loadDocs() {
   try {
     const d = await GET('/documents');
 
-    S.docs = Array.isArray(d.documents)
-      ? d.documents
-      : [];
+    S.docs = (Array.isArray(d.documents) ? d.documents : [])
+      .map(doc => ({
+        ...doc,
+        id: doc.document_id || doc.id,
+        originalName: doc.filename || doc.originalName,
+        pageCount: doc.page_count ?? doc.pageCount,
+        chunkCount: doc.chunk_count ?? doc.chunkCount,
+        size: doc.size ?? doc.file_size,
+        status: doc.status || 'ready'
+      }));
 
     console.log('Documents loaded:', S.docs);
 
     renderDocs();
-
     renderMobileDocuments();
 
   } catch (error) {
     console.error('Failed to load documents:', error);
+    toast('Failed to load documents: ' + error.message, 'error');
   }
 }
 
@@ -943,7 +897,7 @@ function renderDocs() {
 
     list.innerHTML =
       '<div class="doc-empty" id="doc-empty">' +
-      '<div style="font-size:32px;margin-bottom:8px">📂</div>' +
+      '<div style="font-size:32px;margin-bottom:8px">ðŸ“‚</div>' +
       '<p>No documents yet</p>' +
       '<p style="font-size:11px;margin-top:4px;color:var(--text-muted)">' +
       'Upload files to get started' +
@@ -987,8 +941,8 @@ function renderDocs() {
 
     const icon =
       ext === 'PDF'
-        ? '📕'
-        : '📄';
+        ? 'ðŸ“•'
+        : 'ðŸ“„';
 
 
     el.innerHTML = `
@@ -1004,8 +958,8 @@ function renderDocs() {
         </div>
 
         <div class="doc-meta">
-          ${doc.pageCount || '?'}p ·
-          ${doc.chunkCount || '?'} chunks ·
+          ${doc.pageCount || '?'}p Â·
+          ${doc.chunkCount || '?'} chunks Â·
           ${fmtBytes(doc.size)}
         </div>
       </div>
@@ -1018,7 +972,7 @@ function renderDocs() {
         class="doc-del"
         title="Delete"
       >
-        ×
+        Ã—
       </button>
     `;
 
@@ -1184,12 +1138,12 @@ function openDoc(id) {
 
 
   $('ws-meta').textContent =
-    `${doc?.pageCount || '?'} pages · ` +
+    `${doc?.pageCount || '?'} pages Â· ` +
     `${doc?.chunkCount || '?'} chunks`;
 
 
   $('active-indicator').textContent =
-    `📄 ${doc?.originalName || ''}`;
+    `ðŸ“„ ${doc?.originalName || ''}`;
 
 
   const cw =
@@ -1311,7 +1265,7 @@ function startMulti() {
 
 
   $('active-indicator').textContent =
-    `⚡ ${ids.length} docs`;
+    `âš¡ ${ids.length} docs`;
 
   const mobileSelectedDocs =
     $('mobile-selected-documents');
@@ -1327,7 +1281,7 @@ function startMulti() {
         return `
         <div class="mobile-active-doc">
           <span class="mobile-active-doc-icon">
-            📄
+            ðŸ“„
           </span>
 
           <span>
@@ -1368,11 +1322,11 @@ function startMulti() {
 
     cw.innerHTML = `
       <div class="cw-icon">
-        ⚡
+        âš¡
       </div>
 
       <p>
-        Multi-doc chat active —
+        Multi-doc chat active â€”
         <strong>
           ${ids.length} documents
         </strong>
@@ -1433,7 +1387,7 @@ async function delDoc(id, name) {
 
 
     toast(
-      `🗑️ Deleted "${name}"`,
+      `ðŸ—‘ï¸ Deleted "${name}"`,
       'info'
     );
 
@@ -1450,159 +1404,93 @@ async function delDoc(id, name) {
 }
 
 
-/* ══════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    UPLOAD
-   ══════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+
 
 async function handleUpload(files) {
+  if (!files?.length) return;
 
-  if (!files?.length) {
-    return;
-  }
-
-
-  const token =
-    getToken();
-
-
+  const token = getToken();
   if (!token) {
-
-    toast(
-      'Please sign in first',
-      'error'
-    );
-
+    toast('Please sign in first', 'error');
     return;
   }
 
+  showOverlay(files.length);
 
-  const fd =
-    new FormData();
-
-
-  Array.from(files).forEach(
-    f =>
-      fd.append(
-        'files',
-        f
-      )
-  );
-
-
-  showOverlay(
-    files.length
-  );
-
+  const uploadedDocs = [];
+  const errors = [];
 
   try {
+    for (const f of Array.from(files)) {
+      const fd = new FormData();
+      fd.append('file', f);
 
-    const r =
-      await fetch(
-        `${API}/upload`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization':
-              'Bearer ' + token
-          },
-          body: fd
-        }
-      );
+      const r = await fetch(`${API}/upload`, {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer ' + token
+        },
+        body: fd
+      });
 
+      if (r.status === 401) {
+        signOut();
+        return;
+      }
 
-    if (r.status === 401) {
+      const data = await r.json().catch(() => ({}));
 
-      signOut();
+      if (!r.ok) {
+        throw new Error(
+          data.detail || data.error || data.message || r.statusText
+        );
+      }
 
-      return;
+      if (data.uploaded?.length) {
+        uploadedDocs.push(...data.uploaded);
+      }
+
+      if (data.errors?.length) {
+        errors.push(...data.errors);
+      }
     }
 
+    $('file-input').value = '';
 
-    if (!r.ok) {
+    errors.forEach(e => {
+      toast(`❌ ${e.file || 'File'}: ${e.error}`, 'error');
+    });
 
-      const e =
-        await r.json()
-          .catch(() => ({}));
-
-
-      toast(
-        'Upload failed: ' +
-        (
-          e.error ||
-          r.statusText
-        ),
-        'error'
-      );
-
-
-      hideOverlay();
-
-      return;
-    }
-
-
-    const d =
-      await r.json();
-
-
-    hideOverlay();
-
-
-    $('file-input').value =
-      '';
-
-
-    if (d.errors?.length) {
-
-      d.errors.forEach(
-        e =>
-          toast(
-            `❌ ${e.file}: ${e.error}`,
-            'error'
-          )
-      );
-
-    }
-
-
-    if (d.uploaded?.length) {
-
-      toast(
-        `✅ ${d.uploaded.length} file(s) ready!`,
-        'success'
-      );
-
+    if (uploadedDocs.length) {
+      toast(`✅ ${uploadedDocs.length} file(s) uploaded!`, 'success');
 
       await loadDocs();
 
+      const firstId =
+        uploadedDocs[0].document_id || uploadedDocs[0].id;
 
-      if (d.uploaded[0]) {
-
-        openDoc(
-          d.uploaded[0].id
-        );
-
+      if (firstId) {
+        openDoc(firstId);
       }
-
+    } else if (!errors.length) {
+      toast('No documents were uploaded.', 'warning');
     }
 
   } catch (e) {
-
+    toast('Upload failed: ' + e.message, 'error');
+  } finally {
     hideOverlay();
-
-    toast(
-      'Cannot reach server — is backend running?',
-      'error'
-    );
-
   }
-
 }
 
 
-/* ══════════════════════════════════════════════════
+
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    CHAT
-   ══════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 async function sendMsg() {
 
@@ -1691,7 +1579,7 @@ async function sendMsg() {
 
 
     appendAIMsg(
-      '❌ ' + e.message,
+      'âŒ ' + e.message,
       []
     );
 
@@ -1762,7 +1650,7 @@ function appendAIMsg(
 
 
   d.innerHTML =
-    `<div class="msg-avatar">🤖</div>
+    `<div class="msg-avatar">ðŸ¤–</div>
      <div class="msg-body">
 
        <div class="msg-bubble fmt">
@@ -1812,8 +1700,8 @@ function appendAIMsg(
 
           tog.textContent =
             list.style.display === 'none'
-              ? '▼'
-              : '▲';
+              ? 'â–¼'
+              : 'â–²';
 
         }
 
@@ -1862,11 +1750,11 @@ function buildSources(srcs) {
 
       <div class="sources-hdr">
         <span>
-          📎 Sources (${srcs.length})
+          ðŸ“Ž Sources (${srcs.length})
         </span>
 
         <span class="src-toggle">
-          ▲
+          â–²
         </span>
       </div>
 
@@ -1906,7 +1794,7 @@ function showTyping() {
          border:1px solid var(--border)
        "
      >
-       🤖
+       ðŸ¤–
      </div>
 
      <div class="typing-dots">
@@ -1954,58 +1842,8 @@ function scrollBottom() {
 
 
 async function loadHistory(docId) {
-
   clearChatUI();
-
-
-  try {
-
-    const d =
-      await GET(
-        `/documents/${docId}/history`
-      );
-
-
-    const h =
-      d.history || [];
-
-
-    if (!h.length) {
-
-      renderChatWelcome();
-
-      return;
-    }
-
-
-    h.forEach(m => {
-
-      if (m.role === 'user') {
-
-        appendUserMsg(
-          m.content
-        );
-
-      } else {
-
-        appendAIMsg(
-          m.content,
-          m.sources || []
-        );
-
-      }
-
-    });
-
-
-    scrollBottom();
-
-  } catch {
-
-    renderChatWelcome();
-
-  }
-
+  renderChatWelcome();
 }
 
 
@@ -2037,7 +1875,7 @@ function renderChatWelcome() {
      >
 
        <div class="cw-icon">
-         🤖
+         ðŸ¤–
        </div>
 
        <p id="cw-text">
@@ -2053,19 +1891,19 @@ function renderChatWelcome() {
        >
 
          <button class="chip">
-           📋 What is this document about?
+           ðŸ“‹ What is this document about?
          </button>
 
          <button class="chip">
-           🔑 List the key points
+           ðŸ”‘ List the key points
          </button>
 
          <button class="chip">
-           💡 What are the main conclusions?
+           ðŸ’¡ What are the main conclusions?
          </button>
 
          <button class="chip">
-           ❓ Explain the most important concept
+           â“ Explain the most important concept
          </button>
 
        </div>
@@ -2104,44 +1942,16 @@ function renderChatWelcome() {
 
 
 async function clearHistory() {
-
-  if (!S.activeDocId) {
-    return;
-  }
-
-
-  try {
-
-    await DEL(
-      `/documents/${S.activeDocId}/history`
-    );
-
-
-    clearChatUI();
-
-    renderChatWelcome();
-
-
-    toast(
-      '🗑️ Chat cleared',
-      'info'
-    );
-
-  } catch (e) {
-
-    toast(
-      e.message,
-      'error'
-    );
-
-  }
-
+  clearChatUI();
+  renderChatWelcome();
+  toast('Chat cleared', 'info');
 }
 
 
-/* ══════════════════════════════════════════════════
+
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    SUMMARY
-   ══════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 async function genSummary() {
 
@@ -2195,7 +2005,7 @@ async function genSummary() {
 
 
     toast(
-      '✅ Summary ready!',
+      'âœ… Summary ready!',
       'success'
     );
 
@@ -2203,7 +2013,7 @@ async function genSummary() {
 
     $('summary-out').innerHTML =
       `<div class="placeholder">
-         ❌<br/>
+         âŒ<br/>
          ${esc(e.message)}
        </div>`;
 
@@ -2218,7 +2028,7 @@ async function genSummary() {
     btn.disabled = false;
 
     btn.textContent =
-      '✨ Generate Summary';
+      'âœ¨ Generate Summary';
 
   }
 
@@ -2226,82 +2036,58 @@ async function genSummary() {
 
 
 async function compareDoc() {
-
-  const ids =
-    [...S.selectedIds];
-
+  const ids = [...S.selectedIds];
 
   if (ids.length < 2) {
-
-    return toast(
-      'Select 2+ documents',
-      'warning'
-    );
-
+    return toast('Select 2+ documents', 'warning');
   }
 
-
-  const btn =
-    $('compare-btn2');
-
-
+  const btn = $('compare-btn2');
   btn.disabled = true;
-
-  btn.textContent =
-    'Comparing...';
-
+  btn.textContent = 'Comparing...';
 
   $('compare-out').innerHTML =
-    `<div class="loading-row">
-       <div class="mini-spin"></div>
-       Comparing documents...
-     </div>`;
-
+    '<div class="loading-row"><div class="mini-spin"></div>Generating summaries for comparison...</div>';
 
   try {
+    const docs = S.docs.filter(doc => ids.includes(doc.id));
 
-    const d =
-      await POST(
-        '/summary/compare',
-        {
-          docIds: ids
-        }
-      );
+    const results = await Promise.all(
+      docs.map(async doc => {
+        const result = await POST('/summary', {
+          docId: doc.id
+        });
 
-
-    $('compare-out').innerHTML =
-      `<div class="fmt">
-         ${renderMd(d.comparison)}
-       </div>`;
-
-
-    toast(
-      '📊 Comparison ready!',
-      'success'
+        return {
+          name: doc.originalName || 'Document',
+          summary: result.summary || 'No summary returned.'
+        };
+      })
     );
 
+    $('compare-out').innerHTML = results.map(doc => `
+      <div class="fmt" style="margin-bottom:20px">
+        <h3>${esc(doc.name)}</h3>
+        ${renderMd(doc.summary)}
+      </div>
+    `).join('<hr/>');
+
+    toast('Document summaries ready for comparison!', 'success');
+
   } catch (e) {
-
     $('compare-out').innerHTML =
-      `<p style="color:var(--danger)">
-         ${esc(e.message)}
-       </p>`;
-
+      `<p style="color:var(--danger)">${esc(e.message)}</p>`;
   } finally {
-
     btn.disabled = false;
-
-    btn.textContent =
-      '📊 Compare Selected Documents';
-
+    btn.textContent = '📊 Compare Selected Documents';
   }
-
 }
 
 
-/* ══════════════════════════════════════════════════
+
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    FLASHCARDS
-   ══════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 async function genFlashcards() {
 
@@ -2358,7 +2144,7 @@ async function genFlashcards() {
 
 
     toast(
-      `🃏 ${S.flashcards.length} flashcards ready!`,
+      `ðŸƒ ${S.flashcards.length} flashcards ready!`,
       'success'
     );
 
@@ -2366,7 +2152,7 @@ async function genFlashcards() {
 
     $('fc-area').innerHTML =
       `<div class="placeholder">
-         ❌<br/>
+         âŒ<br/>
          ${esc(e.message)}
        </div>`;
 
@@ -2381,7 +2167,7 @@ async function genFlashcards() {
     btn.disabled = false;
 
     btn.textContent =
-      '🃏 Generate Flashcards';
+      'ðŸƒ Generate Flashcards';
 
   }
 
@@ -2452,10 +2238,10 @@ function renderFC(cards) {
 
       const dIcon =
         {
-          easy: '🟢',
-          medium: '🟡',
-          hard: '🔴'
-        }[dCls] || '🟡';
+          easy: 'ðŸŸ¢',
+          medium: 'ðŸŸ¡',
+          hard: 'ðŸ”´'
+        }[dCls] || 'ðŸŸ¡';
 
 
       const dLabel =
@@ -2492,7 +2278,7 @@ function renderFC(cards) {
 
           <div class="fc-hint">
             <span class="fc-hint-icon">
-              👆
+              ðŸ‘†
             </span>
 
             <span>
@@ -2505,7 +2291,7 @@ function renderFC(cards) {
         <div class="fc-back">
 
           <div class="fc-back-label">
-            ✅ Answer
+            âœ… Answer
           </div>
 
           <div class="fc-topic">
@@ -2631,171 +2417,89 @@ function dlFlashcards() {
 }
 
 
-/* ══════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    PODCAST
-   ══════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+
 
 async function genPodcast() {
-
-  const id =
-    S.activeDocId;
-
+  const id = S.activeDocId;
 
   if (!id) {
-
-    return toast(
-      'Open a document first',
-      'warning'
-    );
-
+    return toast('Open a document first', 'warning');
   }
 
-
-  /*
-   * Stop any existing podcast.
-   */
   stopPod();
 
-
-  const btn =
-    $('gen-pod-btn');
-
-
+  const btn = $('gen-pod-btn');
   btn.disabled = true;
-
-  btn.textContent =
-    'Generating script...';
-
+  btn.textContent = 'Generating script...';
 
   try {
+    const d = await POST('/podcast', { docId: id });
 
-    const d =
-      await POST(
-        '/podcast',
-        {
-          docId: id
-        }
-      );
+    S.podScript = d.podcast || d.script || '';
 
-
-    S.podSegs =
-      Array.isArray(d.segments)
-        ? d.segments
-        : [];
-
-
-    S.podScript =
-      d.script || '';
-
-
-    S.podIdx = 0;
-
-    S.podPlaying = false;
-
-    S.podPaused = false;
-
-
-    if (!S.podSegs.length) {
-
-      throw new Error(
-        'No valid Alex/Maya dialogue was generated.'
-      );
-
+    if (!S.podScript.trim()) {
+      throw new Error('The backend returned an empty podcast script.');
     }
 
+    // Convert the returned script into playable dialogue segments.
+    S.podSegs = S.podScript
+      .split(/\n+/)
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map(line => {
+        const match = line.match(/^(Alex|Maya)\s*:\s*(.*)$/i);
 
-    const doc =
-      S.docs.find(
-        x => x.id === id
-      );
+        return {
+          speaker: match ? match[1] : 'Alex',
+          text: match ? match[2] : line
+        };
+      })
+      .filter(segment => segment.text);
 
+    if (!S.podSegs.length) {
+      throw new Error('No playable dialogue was found in the script.');
+    }
 
-    $('player-title').textContent =
-      doc?.originalName ||
-      'Podcast';
+    S.podIdx = 0;
+    S.podPlaying = false;
+    S.podPaused = false;
 
+    const doc = S.docs.find(x => x.id === id);
+    $('player-title').textContent = doc?.originalName || d.docName || 'Podcast';
+
+    const totalWords = S.podSegs.reduce(
+      (total, segment) =>
+        total + segment.text.split(/\s+/).filter(Boolean).length,
+      0
+    );
+
+    const estimatedSeconds = Math.ceil(totalWords / 2.3);
 
     $('player-dur').textContent =
-      `~${d.estimatedDuration || 5} min`;
+      `~${Math.max(1, Math.ceil(estimatedSeconds / 60))} min`;
 
+    $('t-tot').textContent = fmtDur(estimatedSeconds);
+    $('t-cur').textContent = '0:00';
+    $('prog-fill').style.width = '0%';
+    $('sp-line').textContent = '';
+    $('player').style.display = 'flex';
 
-    const totalWords =
-      S.podSegs.reduce(
-        (total, segment) => {
+    renderTranscript(S.podSegs);
+    $('transcript').style.display = 'block';
 
-          return total +
-            String(
-              segment.text || ''
-            )
-              .split(/\s+/)
-              .filter(Boolean)
-              .length;
-
-        },
-        0
-      );
-
-
-    const estimatedSeconds =
-      Math.ceil(
-        totalWords / 2.3
-      );
-
-
-    $('t-tot').textContent =
-      fmtDur(
-        estimatedSeconds
-      );
-
-
-    $('t-cur').textContent =
-      '0:00';
-
-
-    $('prog-fill').style.width =
-      '0%';
-
-
-    $('sp-line').textContent =
-      '';
-
-
-    $('player').style.display =
-      'flex';
-
-
-    renderTranscript(
-      S.podSegs
-    );
-
-
-    $('transcript').style.display =
-      'block';
-
-
-    toast(
-      '🎙️ Script ready — hit play!',
-      'success'
-    );
-
+    toast('Podcast script ready — hit play!', 'success');
 
   } catch (e) {
-
-    toast(
-      e.message,
-      'error'
-    );
-
+    toast('Podcast generation failed: ' + e.message, 'error');
   } finally {
-
     btn.disabled = false;
-
-    btn.textContent =
-      '🎙️ Generate Podcast Script';
-
+    btn.textContent = '🎙️ Generate Podcast Script';
   }
-
 }
+
 
 
 /*
@@ -3208,7 +2912,7 @@ function speakSentence(text, speaker) {
       utterance.lang = voice.lang;
 
       console.log(
-        `${speaker} → ${voice.name} | ${voice.lang} | pitch ${utterance.pitch}`
+        `${speaker} â†’ ${voice.name} | ${voice.lang} | pitch ${utterance.pitch}`
       );
     }
 
@@ -3708,8 +3412,8 @@ function updatePlayUI() {
         S.podPlaying &&
         !S.podPaused
       )
-        ? '⏸️'
-        : '▶️';
+        ? 'â¸ï¸'
+        : 'â–¶ï¸';
 
   }
 
@@ -3963,9 +3667,9 @@ function finishPodcast() {
 }
 
 
-/* ══════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    PODCAST SPEED BUTTONS
-   ══════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 $$('.sp-btn').forEach(
   b => {
@@ -4006,9 +3710,9 @@ $$('.sp-btn').forEach(
 );
 
 
-/* ══════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    EXAM
-   ══════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 async function genExam() {
 
@@ -4076,7 +3780,7 @@ async function genExam() {
 
 
     toast(
-      `🎓 ${S.examQs.length} questions ready!`,
+      `ðŸŽ“ ${S.examQs.length} questions ready!`,
       'success'
     );
 
@@ -4084,7 +3788,7 @@ async function genExam() {
 
     $('exam-area').innerHTML =
       `<div class="placeholder">
-         ❌<br/>
+         âŒ<br/>
          ${esc(e.message)}
        </div>`;
 
@@ -4099,7 +3803,7 @@ async function genExam() {
     btn.disabled = false;
 
     btn.textContent =
-      '🎓 Start Exam';
+      'ðŸŽ“ Start Exam';
 
   }
 
@@ -4107,373 +3811,191 @@ async function genExam() {
 
 
 function renderExam(qs) {
+  $('exam-area').innerHTML = '';
 
-  $('exam-area').innerHTML =
-    '';
+  if (!qs || !qs.length) {
+    $('exam-area').innerHTML =
+      '<div class="placeholder">No exam questions generated.</div>';
+    return;
+  }
 
+  qs.forEach((q, i) => {
+    const el = document.createElement('div');
 
-  qs.forEach(
-    (q, i) => {
+    el.className = 'exam-q';
+    el.dataset.answered = 'false';
 
-      const el =
-        document.createElement(
-          'div'
-        );
+    const type = q.type === 'mcq' ? 'mcq' : 'short';
+    const typeLabel = type === 'mcq' ? 'Multiple Choice' : 'Short Answer';
 
+    let inputHtml = '';
 
-      el.className =
-        'exam-q';
+    if (type === 'mcq' && Array.isArray(q.options)) {
+      inputHtml = `
+        <div class="eq-opts">
+          ${q.options.map(o => {
+            const option = String(o);
+            const match = option.match(/^([A-D])[\s.):\-]+(.*)$/i);
+            const key = match ? match[1].toUpperCase() : option.charAt(0);
+            const text = match ? match[2] : option;
 
-
-      el.dataset.answered =
-        'false';
-
-
-      const typeLabel =
-        q.type === 'mcq'
-          ? 'Multiple Choice'
-          : 'Short Answer';
-
-
-      const typeCls =
-        q.type === 'mcq'
-          ? 'mcq'
-          : 'short';
-
-
-      let inputHtml =
-        '';
-
-
-      if (
-        q.type === 'mcq' &&
-        q.options
-      ) {
-
-        inputHtml =
-          `<div class="eq-opts">
-             ${(q.options || [])
-            .map(
-              o =>
-                `<div
-                      class="eq-opt"
-                      data-key="${o[0]}"
-                    >
-                      <span class="eq-key">
-                        ${o[0]}
-                      </span>
-
-                      <span>
-                        ${esc(
-                  o.slice(3)
-                )}
-                      </span>
-                    </div>`
-            )
-            .join('')}
-           </div>`;
-
-      } else {
-
-        inputHtml =
-          `<div class="eq-sa">
-
-             <textarea
-               placeholder="Type your answer here..."
-             ></textarea>
-
-             <button class="eq-submit">
-               Submit Answer
-             </button>
-
-           </div>`;
-
-      }
-
-
-      el.innerHTML =
-        `<div class="eq-header">
-
-          <span class="eq-num">
-            Q${i + 1}
-          </span>
-
-          <span class="eq-type ${typeCls}">
-            ${typeLabel}
-          </span>
-
+            return `
+              <div class="eq-opt" data-key="${esc(key)}">
+                <span class="eq-key">${esc(key)}</span>
+                <span>${esc(text)}</span>
+              </div>
+            `;
+          }).join('')}
         </div>
-
-        <div class="eq-text">
-          ${esc(q.question)}
+      `;
+    } else {
+      inputHtml = `
+        <div class="eq-sa">
+          <textarea placeholder="Type your answer here..."></textarea>
+          <button class="eq-submit">Submit Answer</button>
         </div>
-
-        ${inputHtml}
-
-        <div class="eq-feedback"></div>`;
-
-
-      /* MCQ */
-      if (
-        q.type === 'mcq'
-      ) {
-
-        el
-          .querySelectorAll(
-            '.eq-opt'
-          )
-          .forEach(
-            opt => {
-
-              opt.onclick = () => {
-
-                if (
-                  el.dataset.answered ===
-                  'true'
-                ) {
-                  return;
-                }
-
-
-                el.dataset.answered =
-                  'true';
-
-
-                const sel =
-                  opt.dataset.key;
-
-
-                const cor =
-                  q.correct;
-
-
-                el
-                  .querySelectorAll(
-                    '.eq-opt'
-                  )
-                  .forEach(
-                    o => {
-
-                      if (
-                        o.dataset.key ===
-                        cor
-                      ) {
-
-                        o.classList.add(
-                          'correct'
-                        );
-
-                      } else if (
-                        o === opt &&
-                        sel !== cor
-                      ) {
-
-                        o.classList.add(
-                          'wrong'
-                        );
-
-                      }
-
-                    }
-                  );
-
-
-                const fb =
-                  el.querySelector(
-                    '.eq-feedback'
-                  );
-
-
-                const ok =
-                  sel === cor;
-
-
-                if (ok) {
-                  S.examCorrect++;
-                }
-
-
-                fb.className =
-                  'eq-feedback ' +
-                  (
-                    ok
-                      ? 'correct'
-                      : 'wrong'
-                  );
-
-
-                fb.style.display =
-                  'block';
-
-
-                fb.innerHTML =
-                  (
-                    ok
-                      ? '✅ Correct! '
-                      : '❌ Incorrect. Correct: ' +
-                      cor +
-                      '. '
-                  ) +
-                  (
-                    q.explanation ||
-                    ''
-                  );
-
-
-                S.examAnswered++;
-
-                updateScore();
-
-              };
-
-            }
-          );
-
-      }
-
-
-      /* Short answer */
-      if (
-        q.type !== 'mcq'
-      ) {
-
-        const sb =
-          el.querySelector(
-            '.eq-submit'
-          );
-
-
-        if (sb) {
-
-          sb.onclick =
-            async () => {
-
-              if (
-                el.dataset.answered ===
-                'true'
-              ) {
-                return;
-              }
-
-
-              const ans =
-                el
-                  .querySelector(
-                    'textarea'
-                  )
-                  .value
-                  .trim();
-
-
-              if (!ans) {
-
-                toast(
-                  'Please write an answer',
-                  'warning'
-                );
-
-                return;
-              }
-
-
-              el.dataset.answered =
-                'true';
-
-
-              sb.disabled =
-                true;
-
-
-              sb.textContent =
-                'Evaluating...';
-
-
-              try {
-
-                const r =
-                  await POST(
-                    '/flashcards/evaluate',
-                    {
-                      question:
-                        q.question,
-
-                      userAnswer:
-                        ans,
-
-                      modelAnswer:
-                        q.model_answer ||
-                        ''
-                    }
-                  );
-
-
-                const ok =
-                  r.score >= 60;
-
-
-                if (ok) {
-                  S.examCorrect++;
-                }
-
-
-                const fb =
-                  el.querySelector(
-                    '.eq-feedback'
-                  );
-
-
-                fb.className =
-                  'eq-feedback ' +
-                  (
-                    ok
-                      ? 'correct'
-                      : 'wrong'
-                  );
-
-
-                fb.style.display =
-                  'block';
-
-
-                fb.innerHTML =
-                  `<strong>
-                     Score: ${r.score}/100
-                   </strong>
-                   <br/>
-                   ${esc(
-                    r.feedback || ''
-                  )}`;
-
-
-                S.examAnswered++;
-
-                updateScore();
-
-              } catch (e) {
-
-                sb.disabled =
-                  false;
-
-
-                sb.textContent =
-                  'Submit Answer';
-
-              }
-
-            };
-
-        }
-
-      }
-
-
-      $('exam-area')
-        .appendChild(el);
-
+      `;
     }
-  );
 
+    el.innerHTML = `
+      <div class="eq-header">
+        <span class="eq-num">Q${i + 1}</span>
+        <span class="eq-type ${type}">${typeLabel}</span>
+      </div>
+      <div class="eq-text">${esc(q.question || '')}</div>
+      ${inputHtml}
+      <div class="eq-feedback"></div>
+    `;
+
+    // Multiple-choice question
+    if (type === 'mcq') {
+      el.querySelectorAll('.eq-opt').forEach(opt => {
+        opt.onclick = () => {
+          if (el.dataset.answered === 'true') return;
+
+          const selected = opt.dataset.key;
+          const rawCorrect = String(q.correct ?? '').trim();
+          const correctMatch = rawCorrect.match(/^([A-D])(?:[\s.):\-]|$)/i);
+          const correct = correctMatch
+            ? correctMatch[1].toUpperCase()
+            : rawCorrect.toUpperCase();
+
+          if (!correct) {
+            toast('This question has no correct answer configured.', 'error');
+            return;
+          }
+
+          el.dataset.answered = 'true';
+
+          el.querySelectorAll('.eq-opt').forEach(option => {
+            if (option.dataset.key.toUpperCase() === correct) {
+              option.classList.add('correct');
+            } else if (option === opt && selected.toUpperCase() !== correct) {
+              option.classList.add('wrong');
+            }
+          });
+
+          const ok = selected.toUpperCase() === correct;
+          if (ok) S.examCorrect++;
+
+          const fb = el.querySelector('.eq-feedback');
+          fb.className = 'eq-feedback ' + (ok ? 'correct' : 'wrong');
+          fb.style.display = 'block';
+
+          const explanation = q.explanation
+            ? `<br/>${esc(q.explanation)}`
+            : '';
+
+          fb.innerHTML =
+            (ok
+              ? 'Correct! '
+              : `Incorrect. Correct answer: ${esc(correct)}. `) +
+            explanation;
+
+          S.examAnswered++;
+          updateScore();
+        };
+      });
+    }
+
+    // Short-answer question: local keyword-based grading
+    if (type !== 'mcq') {
+      const sb = el.querySelector('.eq-submit');
+
+      if (sb) {
+        sb.onclick = () => {
+          if (el.dataset.answered === 'true') return;
+
+          const ans = el.querySelector('textarea').value.trim();
+
+          if (!ans) {
+            toast('Please write an answer', 'warning');
+            return;
+          }
+
+          const modelAnswer = String(
+            q.model_answer || q.answer || q.correct_answer || ''
+          ).trim();
+
+          if (!modelAnswer) {
+            toast(
+              'No model answer is available for this question. Check the exam API response.',
+              'error'
+            );
+            return;
+          }
+
+          const normalize = text =>
+            text.toLowerCase()
+              .replace(/[^\w\s]/g, ' ')
+              .split(/\s+/)
+              .filter(Boolean);
+
+          const expectedWords = [...new Set(normalize(modelAnswer))];
+          const userWords = new Set(normalize(ans));
+
+          const matched = expectedWords.filter(word => userWords.has(word)).length;
+
+          const score = expectedWords.length
+            ? Math.round((matched / expectedWords.length) * 100)
+            : 0;
+
+          const ok = score >= 60;
+
+          el.dataset.answered = 'true';
+          sb.disabled = true;
+          sb.textContent = 'Answer Submitted';
+
+          el.querySelector('textarea').disabled = true;
+
+          if (ok) S.examCorrect++;
+
+          const fb = el.querySelector('.eq-feedback');
+          fb.className = 'eq-feedback ' + (ok ? 'correct' : 'wrong');
+          fb.style.display = 'block';
+
+          fb.innerHTML = `
+            <strong>Keyword match score: ${score}/100</strong>
+            <br/>
+            ${ok
+              ? 'Good job! Your answer contains many key terms.'
+              : 'Review the model answer and include more relevant key terms.'}
+            <br/>
+            <strong>Model answer:</strong> ${esc(modelAnswer)}
+            <br/>
+            <small>This is keyword matching, not AI-based grading.</small>
+          `;
+
+          S.examAnswered++;
+          updateScore();
+        };
+      }
+    }
+
+    $('exam-area').appendChild(el);
+  });
 }
+
 
 
 function updateScore() {
@@ -4497,14 +4019,14 @@ function updateScore() {
         S.examAnswered *
         100
       ) + '%'
-      : '—';
+      : 'â€”';
 
 }
 
 
-/* ══════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    UI HELPERS
-   ══════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 function showWelcome() {
 
@@ -4602,21 +4124,21 @@ function resetPanels() {
 
   $('summary-out').innerHTML =
     `<div class="placeholder">
-       📝<br/>
+       ðŸ“<br/>
        Click Generate to create a summary
      </div>`;
 
 
   $('fc-area').innerHTML =
     `<div class="placeholder">
-       🃏<br/>
+       ðŸƒ<br/>
        Generate flashcards to start studying
      </div>`;
 
 
   $('exam-area').innerHTML =
     `<div class="placeholder">
-       🎓<br/>
+       ðŸŽ“<br/>
        Start an exam to test your knowledge
      </div>`;
 
@@ -4712,7 +4234,7 @@ function renderUserBadge() {
        onclick="signOut()"
        title="Sign out"
      >
-       ⏻
+       â»
      </button>`;
 
 }
@@ -4795,9 +4317,9 @@ function dlCurrent() {
 }
 
 
-/* ══════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    TOAST
-   ══════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 function toast(
   msg,
@@ -4805,10 +4327,10 @@ function toast(
 ) {
 
   const icons = {
-    success: '✅',
-    error: '❌',
-    warning: '⚠️',
-    info: 'ℹ️'
+    success: 'âœ…',
+    error: 'âŒ',
+    warning: 'âš ï¸',
+    info: 'â„¹ï¸'
   };
 
 
@@ -4824,7 +4346,7 @@ function toast(
 
   el.innerHTML =
     `<span>
-       ${icons[type] || 'ℹ️'}
+       ${icons[type] || 'â„¹ï¸'}
      </span>
 
      <span style="flex:1">
@@ -4832,7 +4354,7 @@ function toast(
      </span>
 
      <span class="toast-close">
-       ×
+       Ã—
      </span>`;
 
 
@@ -4870,9 +4392,9 @@ function toast(
 }
 
 
-/* ══════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    UTILITIES
-   ══════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 function esc(s) {
 
@@ -4957,7 +4479,7 @@ function renderMd(text) {
     )
 
     .replace(
-      /^[•\-\*] (.+)$/gm,
+      /^[â€¢\-\*] (.+)$/gm,
       '<li>$1</li>'
     )
 
@@ -5279,7 +4801,7 @@ function renderMobileDocuments() {
       <div class="mobile-history-empty">
 
         <div class="mobile-history-empty-icon">
-          📂
+          ðŸ“‚
         </div>
 
         <h3>No documents yet</h3>
@@ -5363,7 +4885,7 @@ function renderMobileDocuments() {
       }"
       >
 
-        <span class="checkmark">✓</span>
+        <span class="checkmark">âœ“</span>
 
       </button>
 
@@ -5371,7 +4893,7 @@ function renderMobileDocuments() {
       <!-- Document icon -->
 
       <div class="mobile-history-icon">
-        📄
+        ðŸ“„
       </div>
 
 
@@ -5392,7 +4914,7 @@ function renderMobileDocuments() {
           ${doc.pageCount || 0}
           pages
 
-          ·
+          Â·
 
           ${doc.chunkCount || 0}
           chunks
@@ -5405,7 +4927,7 @@ function renderMobileDocuments() {
       <!-- Open arrow -->
 
       <div class="mobile-history-arrow">
-        →
+        â†’
       </div>
 
     `;
@@ -5503,7 +5025,7 @@ function renderMobileDocuments() {
         /*
          * Update:
          * "2 selected"
-         * "⚡ Chat with 2 documents"
+         * "âš¡ Chat with 2 documents"
          */
 
         updateMobileMultiActions();
@@ -5957,7 +5479,7 @@ function updateMobileMultiActions() {
       chatBtn.disabled = false;
 
       chatBtn.textContent =
-        '💬 Chat with this document';
+        'ðŸ’¬ Chat with this document';
 
     }
 
@@ -5974,7 +5496,7 @@ function updateMobileMultiActions() {
     chatBtn.disabled = false;
 
     chatBtn.textContent =
-      `⚡ Chat with ${selected} documents`;
+      `âš¡ Chat with ${selected} documents`;
 
   }
 }
