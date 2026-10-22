@@ -1,8 +1,5 @@
-﻿from pathlib import Path
-
-from fastapi import APIRouter, HTTPException
+﻿from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from pypdf import PdfReader
 
 from backend.services.ai_features import (
     summarize,
@@ -11,11 +8,9 @@ from backend.services.ai_features import (
     generate_exam,
     evaluate_answer,
 )
-from backend.services.document_metadata import DocumentMetadataStore
+from backend.services.cloud_document_service import get_document_text
 
 router = APIRouter()
-metadata_store = DocumentMetadataStore()
-UPLOAD_DIR = Path("backend/uploads")
 
 
 class SummaryRequest(BaseModel):
@@ -41,32 +36,6 @@ class EvaluateRequest(BaseModel):
     question: str
     userAnswer: str
     modelAnswer: str = ""
-
-
-def get_document_text(document_id: str):
-    metadata = metadata_store.get(document_id)
-    if not metadata:
-        raise HTTPException(status_code=404, detail="Document not found")
-
-    stored_filename = metadata.get("stored_filename")
-    if not stored_filename or Path(stored_filename).name != stored_filename:
-        raise HTTPException(status_code=404, detail="Stored PDF not found")
-
-    file_path = UPLOAD_DIR / stored_filename
-    if not file_path.is_file():
-        raise HTTPException(status_code=404, detail="Stored PDF not found")
-
-    try:
-        reader = PdfReader(str(file_path))
-        text = "\n".join(page.extract_text() or "" for page in reader.pages)
-    except Exception as exc:
-        raise HTTPException(status_code=422, detail="Could not extract text from this PDF") from exc
-
-    if not text.strip():
-        raise HTTPException(status_code=422, detail="No extractable text found in this PDF")
-
-    return text, metadata
-
 
 def run_ai(operation, *args):
     try:

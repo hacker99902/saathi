@@ -16,7 +16,7 @@ from backend.routes.ai_features import router as ai_features_router
 from backend.services.rag_service import RAGService
 from backend.services.rag_retriever import RAGRetriever
 from backend.services.document_metadata import DocumentMetadataStore
-
+from backend.services.supabase_client import supabase
 
 # =========================================================
 # FastAPI Application
@@ -259,94 +259,102 @@ async def upload_pdf(
     file: UploadFile = File(..., description="PDF file to upload"),
     requested_document_id: Optional[str] = None
 ):
+    document_id = requested_document_id or str(uuid.uuid4())
+    file_path = None
+    storage_path = f"{document_id}.pdf"
+    storage_uploaded = False
+    metadata_saved = False  
 
-    uploaded = []
-    errors = []
-    files = [file]
+    try:
+        # Prevent overwriting an existing document.
+        if metadata_store.exists(document_id):
+            raise HTTPException(
+                status_code=409,
+                detail="A document with this ID already exists."
+            )
+        if not file.filename:
+            raise HTTPException(status_code=400, detail="Filename is missing.")
 
-    for file in files:
-        file_path = None
-        document_id = requested_document_id or str(uuid.uuid4())
-        try:
-            if not file.filename:
-                errors.append({
-                    "filename": "unknown",
-                    "error": "Filename is missing."
-                })
-                continue
-
-            if not file.filename.lower().endswith(".pdf"):
-                errors.append({
-                    "filename": file.filename,
-                    "error": "Only PDF files are supported."
-                })
-                continue
-
-            safe_filename = Path(file.filename).name
-            stored_filename = f"{document_id}.pdf"
-            file_path = UPLOAD_DIR / stored_filename
-
-            with open(file_path, "wb") as buffer:
-                shutil.copyfileobj(file.file, buffer)
-
-            result = retriever.process_pdf(
-                file_path=str(file_path),
-                document_id=document_id
+        if not file.filename.lower().endswith(".pdf"):
+            raise HTTPException(
+                status_code=400,
+                detail="Only PDF files are supported."
             )
 
-            metadata = {
-                "document_id": document_id,
-                "filename": safe_filename,
-                "stored_filename": stored_filename,
-                "page_count": result["page_count"],
-                "chunk_count": result["chunk_count"],
-                "vector_count": result["vector_count"]
-            }
+        safe_filename = Path(file.filename).name
+        stored_filename = f"{document_id}.pdf"
+        file_path = UPLOAD_DIR / stored_filename
 
-            metadata_store.save(metadata)
+        # Save temporarily so the existing PDF processor can read it.
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
 
-            uploaded.append({
-                **metadata
-            })
+        # Upload the original PDF to the private Supabase Storage bucket.
+        with open(file_path, "rb") as pdf_file:
+            supabase.storage.from_("saathi-documents").upload(
+                path=storage_path,
+                file=pdf_file.read(),
+                file_options={
+                    "content-type": "application/pdf",
+                    "upsert": "true"
+                }
+            )
+        storage_uploaded = True
 
-        except Exception as error:
-            # Remove any vectors created by a partially failed upload.
+        # Keep the existing Qdrant processing pipeline.
+        result = retriever.process_pdf(
+            file_path=str(file_path),
+            document_id=document_id
+        )
+
+        metadata = {
+            "document_id": document_id,
+            "filename": safe_filename,
+            "stored_filename": stored_filename,
+            "storage_path": storage_path,
+            "storage_bucket": "saathi-documents",
+            "page_count": result["page_count"],
+            "chunk_count": result["chunk_count"],
+            "vector_count": result["vector_count"]
+        }
+
+        metadata_store.save(metadata)
+        metadata_saved = True
+
+        return {
+            "message": "Upload processing completed",
+            "uploaded": [metadata],
+            "errors": []
+        }
+
+    except HTTPException:
+        raise
+
+    
+    except Exception as error:
+        # Remove Qdrant data created by this failed upload.
+        try:
+            retriever.load_document(document_id).delete()
+        except Exception as cleanup_error:
+            print(f"Qdrant cleanup failed for {document_id}: {cleanup_error}")
+
+        # Only remove cloud data if this request uploaded it.
+        if storage_uploaded:
             try:
-                if document_id:
-                    retriever.load_document(document_id).delete()
+                supabase.storage.from_("saathi-documents").remove([storage_path])
             except Exception as cleanup_error:
-                print(
-                    f"Qdrant cleanup failed for {document_id}: "
-                    f"{cleanup_error}"
-                )
+                print(f"Supabase file cleanup failed: {cleanup_error}")
 
-            # Remove the uploaded PDF if it exists.
-            if file_path and file_path.exists():
-                file_path.unlink()
-
-            # Remove metadata if it was already saved.
+        # Only remove metadata if this request saved it.
+        if metadata_saved:
             try:
-                if document_id:
-                    metadata_store.delete(document_id)
+                metadata_store.delete(document_id)
             except Exception as cleanup_error:
-                print(
-                    f"Metadata cleanup failed for {document_id}: "
-                    f"{cleanup_error}"
-                )
+                print(f"Metadata cleanup failed for {document_id}: {cleanup_error}")
 
-            errors.append({
-                "filename": file.filename or "unknown",
-                "error": str(error)
-            })
+        raise HTTPException(status_code=500, detail=str(error)) from error
 
-        finally:
-            await file.close()
 
-    return {
-        "message": "Upload processing completed",
-        "uploaded": uploaded,
-        "errors": errors
-    }
 
 
 # =========================================================
@@ -399,10 +407,8 @@ def get_document(
 # =========================================================
 # Delete Document
 # =========================================================
-
 @app.delete("/documents/{document_id}")
 def delete_document(document_id: str):
-    # Check whether the document exists.
     metadata = metadata_store.get(document_id)
 
     if metadata is None:
@@ -411,45 +417,33 @@ def delete_document(document_id: str):
             detail="Document not found."
         )
 
+    document_id_deleted = False
+
     try:
-        # Delete this document's FAISS data.
+        # 1. Delete vectors from Qdrant.
         retriever.load_document(document_id).delete()
 
-        # Delete this document's metadata.
+        # 2. Delete the PDF from Supabase Storage.
+        storage_path = metadata.get("storage_path")
+        storage_bucket = metadata.get(
+            "storage_bucket",
+            "saathi-documents"
+        )
+
+        if storage_path:
+            supabase.storage.from_(storage_bucket).remove(
+                [storage_path]
+            )
+
+        # 3. Delete metadata from Supabase.
         metadata_store.delete(document_id)
+        document_id_deleted = True
 
-        # Delete the PDF safely.
-        stored_filename = metadata.get("stored_filename")
-
-        if stored_filename:
-            # New uploads have unique filenames.
-            file_path = UPLOAD_DIR / stored_filename
-
-            if file_path.exists():
-                file_path.unlink()
-
-        else:
-            # Legacy documents may share the same physical PDF.
-            original_filename = metadata.get("filename")
-
-            if original_filename:
-                other_legacy_documents = [
-                    doc
-                    for doc in metadata_store.get_all()
-                    if doc.get("document_id") != document_id
-                    and doc.get("filename") == original_filename
-                    and not doc.get("stored_filename")
-                ]
-
-                # Delete the legacy PDF only when no other
-                # legacy document record references it.
-                if not other_legacy_documents:
-                    file_path = UPLOAD_DIR / Path(original_filename).name
-
-                    if file_path.exists():
-                        file_path.unlink()
-
-        return {"ok": True}
+        return {
+            "ok": True,
+            "document_id": document_id,
+            "message": "Document and associated data deleted."
+        }
 
     except HTTPException:
         raise
@@ -457,5 +451,5 @@ def delete_document(document_id: str):
     except Exception as error:
         raise HTTPException(
             status_code=500,
-            detail=str(error)
-        )
+            detail=f"Document deletion failed: {error}"
+        ) from error

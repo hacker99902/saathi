@@ -1,141 +1,49 @@
-import json
-from pathlib import Path
+
 from typing import Dict, List, Optional
+
+from backend.services.supabase_client import supabase
 
 
 class DocumentMetadataStore:
+    TABLE_NAME = "documents"
 
-    def __init__(
-        self,
-        base_directory: str = "backend/data/documents"
-    ):
-        self.base_directory = Path(base_directory)
-
-        self.base_directory.mkdir(
-            parents=True,
-            exist_ok=True
-        )
-
-    # --------------------------------------------------
-    # Get metadata file path
-    # --------------------------------------------------
-
-    def get_metadata_path(
-        self,
-        document_id: str
-    ) -> Path:
-
-        return (
-            self.base_directory
-            / f"{document_id}.json"
-        )
-
-    # --------------------------------------------------
-    # Save metadata
-    # --------------------------------------------------
-
-    def save(
-        self,
-        metadata: Dict
-    ):
-
+    def save(self, metadata: Dict):
         if "document_id" not in metadata:
-            raise ValueError(
-                "document_id is required."
-            )
+            raise ValueError("document_id is required.")
 
-        document_id = metadata["document_id"]
-
-        metadata_path = self.get_metadata_path(
-            document_id
+        result = (
+            supabase.table(self.TABLE_NAME)
+            .upsert(metadata, on_conflict="document_id")
+            .execute()
         )
+        return result.data[0] if result.data else metadata
 
-        with open(
-            metadata_path,
-            "w",
-            encoding="utf-8"
-        ) as file:
-
-            json.dump(
-                metadata,
-                file,
-                ensure_ascii=False,
-                indent=2
-            )
-
-    # --------------------------------------------------
-    # Load metadata
-    # --------------------------------------------------
-
-    def get(
-        self,
-        document_id: str
-    ) -> Optional[Dict]:
-
-        metadata_path = self.get_metadata_path(
-            document_id
+    def get(self, document_id: str) -> Optional[Dict]:
+        result = (
+            supabase.table(self.TABLE_NAME)
+            .select("*")
+            .eq("document_id", document_id)
+            .limit(1)
+            .execute()
         )
+        return result.data[0] if result.data else None
 
-        if not metadata_path.exists():
-            return None
-
-        with open(
-            metadata_path,
-            "r",
-            encoding="utf-8"
-        ) as file:
-
-            return json.load(file)
-
-    # --------------------------------------------------
-    # Check document exists
-    # --------------------------------------------------
-
-    def exists(
-        self,
-        document_id: str
-    ) -> bool:
-
-        return self.get_metadata_path(
-            document_id
-        ).exists()
-
-    # --------------------------------------------------
-    # Get all documents
-    # --------------------------------------------------
+    def exists(self, document_id: str) -> bool:
+        return self.get(document_id) is not None
 
     def get_all(self) -> List[Dict]:
-
-        documents = []
-
-        for metadata_file in self.base_directory.glob(
-            "*.json"
-        ):
-
-            with open(
-                metadata_file,
-                "r",
-                encoding="utf-8"
-            ) as file:
-
-                documents.append(
-                    json.load(file)
-                )
-
-        return documents
-
-    # --------------------------------------------------
-    # Delete document metadata
-    # --------------------------------------------------
-
-    def delete(
-        self,
-        document_id: str
-    ):
-
-        metadata_path = self.get_metadata_path(
-            document_id
+        result = (
+            supabase.table(self.TABLE_NAME)
+            .select("*")
+            .order("created_at", desc=True)
+            .execute()
         )
+        return result.data or []
 
-        if metadata_path.exists():
-            metadata_path.unlink()
+    def delete(self, document_id: str):
+        (
+            supabase.table(self.TABLE_NAME)
+            .delete()
+            .eq("document_id", document_id)
+            .execute()
+        )
