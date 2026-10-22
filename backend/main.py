@@ -174,7 +174,9 @@ def chat(request: ChatRequest):
             result = rag_service.ask(
                 document_id=document_id,
                 question=question,
-                session_id=request.session_id or "default"
+                session_id=(
+                    f"{request.session_id or 'default'}:{document_id}"
+                )
             )
 
             results.append(result)

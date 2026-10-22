@@ -1114,6 +1114,9 @@ function openDoc(id) {
 
   S.activeDocId = id;
 
+// Reset the chat session when switching documents.
+  if (!S.chatSessions) S.chatSessions = {};
+
   S.multiMode = false;
 
 
@@ -1492,107 +1495,61 @@ async function handleUpload(files) {
    CHAT
    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
+
 async function sendMsg() {
+  const q = $('chat-input').value.trim();
+  if (!q) return;
 
-  const q =
-    $('chat-input')
-      .value
-      .trim();
-
-
-  if (!q) {
-    return;
-  }
-
-
-  const ids =
-    S.multiMode
-      ? [...S.selectedIds]
-      : S.activeDocId
-        ? [S.activeDocId]
-        : [];
-
+  const ids = S.multiMode
+    ? [...S.selectedIds]
+    : S.activeDocId
+      ? [S.activeDocId]
+      : [];
 
   if (!ids.length) {
-
-    toast(
-      'Select a document first',
-      'warning'
-    );
-
+    toast('Select a document first', 'warning');
     return;
   }
 
+  // Keep a separate chat session for each document selection.
+  if (!S.chatSessions) S.chatSessions = {};
 
-  $('chat-input').value =
-    '';
-
-
-  autoResize(
-    $('chat-input')
-  );
-
-
-  $('send-btn').disabled =
-    true;
-
-
-  const cw =
-    $('chat-welcome');
-
-
-  if (cw) {
-    cw.remove();
+  const sessionKey = [...ids].sort().join(',');
+  if (!S.chatSessions[sessionKey]) {
+    S.chatSessions[sessionKey] =
+      (crypto.randomUUID?.() ||
+        `${Date.now()}-${Math.random().toString(36).slice(2)}`);
   }
 
+  const sessionId = S.chatSessions[sessionKey];
+
+  $('chat-input').value = '';
+  autoResize($('chat-input'));
+  $('send-btn').disabled = true;
+
+  const cw = $('chat-welcome');
+  if (cw) cw.remove();
 
   appendUserMsg(q);
-
-
-  const tid =
-    showTyping();
-
+  const tid = showTyping();
 
   try {
-
-    const d =
-      await POST(
-        '/chat',
-        {
-          query: q,
-          docIds: ids
-        }
-      );
-
+    const d = await POST('/chat', {
+      query: q,
+      docIds: ids,
+      session_id: sessionId
+    });
 
     removeTyping(tid);
-
-
-    appendAIMsg(
-      d.answer || d.raw,
-      d.sources || []
-    );
+    appendAIMsg(d.answer || d.raw || 'No answer returned.', d.sources || []);
 
   } catch (e) {
-
     removeTyping(tid);
-
-
-    appendAIMsg(
-      'âŒ ' + e.message,
-      []
-    );
-
+    appendAIMsg('Chat error: ' + e.message, []);
   } finally {
-
-    $('send-btn').disabled =
-      false;
-
-
+    $('send-btn').disabled = false;
     $('chat-input').focus();
-
   }
-
 }
 
 

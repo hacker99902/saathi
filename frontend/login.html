@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Saathi — Sign In</title>
+  <title>Saathi â€” Sign In</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
     rel="stylesheet" />
   <style>
@@ -43,7 +43,7 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ─── LEFT PANEL ─── */
+    /* â”€â”€â”€ LEFT PANEL â”€â”€â”€ */
     .left {
       position: relative;
       overflow: hidden;
@@ -249,7 +249,7 @@
       color: #64748b;
     }
 
-    /* ─── RIGHT PANEL ─── */
+    /* â”€â”€â”€ RIGHT PANEL â”€â”€â”€ */
     .right {
       background: #f8fafc;
       display: flex;
@@ -761,7 +761,7 @@
       }
     }
 
-    /* ─── RESPONSIVE ─── */
+    /* â”€â”€â”€ RESPONSIVE â”€â”€â”€ */
     @media (max-width: 960px) {
       body {
         grid-template-columns: 1fr;
@@ -1293,7 +1293,7 @@
       }
     }
     /* =====================================================
-   SAATHI LOGIN — MOBILE ALIGNMENT FIX
+   SAATHI LOGIN â€” MOBILE ALIGNMENT FIX
    Alignment only. No design/functionality changes.
    ===================================================== */
 
@@ -1563,7 +1563,7 @@
                 <path d="M7 11V7a5 5 0 0110 0v4" />
               </svg>
             </span>
-            <input class="inp" id="si-pw" type="password" placeholder="••••••••" autocomplete="current-password" />
+            <input class="inp" id="si-pw" type="password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="current-password" />
             <button type="button" class="pw-toggle" onclick="togglePw('si-pw',this)" aria-label="Show password">
               <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -1576,7 +1576,7 @@
         </div>
 
         <button class="btn-sub" id="b-si" onclick="doSignIn()">
-          <span class="bt">Sign in →</span>
+          <span class="bt">Sign in â†’</span>
           <div class="spin"></div>
         </button>
         <div class="af">No account yet? <a href="#" onclick="sw('su')">Create one free</a></div>
@@ -1658,7 +1658,7 @@
         </div>
 
         <button class="btn-sub" id="b-su" onclick="doSignUp()">
-          <span class="bt">Create account →</span>
+          <span class="bt">Create account â†’</span>
           <div class="spin"></div>
         </button>
         <div class="af">Already have an account? <a href="#" onclick="sw('si')">Sign in</a></div>
@@ -1669,7 +1669,7 @@
   </div>
 
   <script>
-    const API = 'https://saathi-backend-rdli.onrender.com/api';
+    const API = 'https://saathi-python-backend.onrender.com';
     const TK = 'saathi_token';
     const UK = 'saathi_user';
 
@@ -1704,7 +1704,7 @@
         document.getElementById('p-' + t).classList.toggle('on', (t === 'si') === si);
       });
       document.getElementById('hdg').textContent = si ? 'Welcome back' : 'Create account';
-      document.getElementById('sub').textContent = si ? 'Sign in to your Saathi workspace' : "Start for free — no credit card required";
+      document.getElementById('sub').textContent = si ? 'Sign in to your Saathi workspace' : "Start for free â€” no credit card required";
       clr();
     }
 
@@ -1722,7 +1722,7 @@
         const d = await r.json();
         if (!r.ok) { al('al-si', d.error || 'Sign in failed', 'err'); if (d.field === 'email') fe('si-em', d.error); return; }
         save(d.token, d.user);
-        al('al-si', 'Signed in! Redirecting…', 'ok');
+        al('al-si', 'Signed in! Redirectingâ€¦', 'ok');
         setTimeout(() => location.replace('index.html'), 600);
       } catch { al('al-si', 'Cannot reach server. Please try again.', 'err'); }
       finally { ld('b-si', false); }
@@ -1745,7 +1745,7 @@
         const d = await r.json();
         if (!r.ok) { al('al-su', d.error || 'Sign up failed', 'err'); if (d.field === 'email') fe('su-em', d.error); return; }
         save(d.token, d.user);
-        al('al-su', 'Account created! Welcome 🎉', 'ok');
+        al('al-su', 'Account created! Welcome ðŸŽ‰', 'ok');
         setTimeout(() => location.replace('index.html'), 800);
       } catch { al('al-su', 'Cannot reach server. Please try again.', 'err'); }
       finally { ld('b-su', false); }
@@ -1811,7 +1811,7 @@
         return;
       }
 
-      al(alertId, 'Signing in with Google…', 'info');
+      al(alertId, 'Signing in with Googleâ€¦', 'info');
 
       try {
         const r = await fetch(API + '/auth/google', {
@@ -1833,7 +1833,7 @@
         }
 
         save(d.token, d.user);
-        al(alertId, 'Signed in with Google! Redirecting…', 'ok');
+        al(alertId, 'Signed in with Google! Redirectingâ€¦', 'ok');
         setTimeout(() => location.replace('index.html'), 500);
       } catch (error) {
         console.error('Google login error:', error);
@@ -1858,7 +1858,7 @@
       if (val.length >= 8) s++;
       if (/[A-Z]/.test(val) && /[0-9]/.test(val)) s++;
       if (/[^A-Za-z0-9]/.test(val) && val.length >= 12) s++;
-      const cfg = [{ c: 'w', t: 'Weak' }, { c: 'm', t: 'Medium' }, { c: 's', t: 'Strong ✓' }];
+      const cfg = [{ c: 'w', t: 'Weak' }, { c: 'm', t: 'Medium' }, { c: 's', t: 'Strong âœ“' }];
       for (let i = 0; i < s; i++) document.getElementById('sb' + (i + 1)).classList.add(cfg[s - 1].c);
       l.textContent = cfg[Math.max(0, s - 1)].t;
     }
@@ -1869,7 +1869,7 @@
     const isEm = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
     function fe(id, msg) { const i = document.getElementById(id), e = document.getElementById('e-' + id); if (i) i.classList.add('err'); if (e) { e.textContent = msg; e.classList.add('show'); } }
     function clr() { document.querySelectorAll('.ferr').forEach(e => { e.classList.remove('show'); e.textContent = '' }); document.querySelectorAll('.inp').forEach(i => i.classList.remove('err')); document.querySelectorAll('.alert').forEach(a => a.classList.remove('show')); }
-    function al(id, msg, type) { const e = document.getElementById(id); if (!e) return; e.textContent = (type === 'err' ? '⚠ ' : type === 'ok' ? '✓ ' : 'ℹ ') + msg; e.className = 'alert show ' + type; }
+    function al(id, msg, type) { const e = document.getElementById(id); if (!e) return; e.textContent = (type === 'err' ? 'âš  ' : type === 'ok' ? 'âœ“ ' : 'â„¹ ') + msg; e.className = 'alert show ' + type; }
     function ld(id, on) { const b = document.getElementById(id); if (!b) return; b.disabled = on; b.classList.toggle('ld', on); }
     document.addEventListener('keydown', e => { if (e.key !== 'Enter' || e.target.tagName === 'BUTTON') return; const a = document.querySelector('.panel.on')?.id; if (a === 'p-si') doSignIn(); else if (a === 'p-su') doSignUp(); });
     if (new URLSearchParams(location.search).get('mode') === 'signup') sw('su');
