@@ -1,7 +1,8 @@
 ﻿from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel  
-from backend.services.llm_service import client, MODEL_NAME
+from pydantic import BaseModel
+
 from backend.services.cloud_document_service import get_document_text
+from backend.services.groq_service import podcast as generate_podcast
 
 router = APIRouter()
 
@@ -11,52 +12,40 @@ class PodcastRequest(BaseModel):
 
 
 @router.post("/podcast")
-def create_podcast(request: PodcastRequest):
-    text, metadata = get_document_text(request.docId)
-
+async def create_podcast(request: PodcastRequest):
     try:
-        response = client.chat.completions.create(
-            model=MODEL_NAME,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "Create a natural educational podcast script in which Maya, "
-                        "a patient teacher, helps Alex, a student, understand the document. "
-                        "Use clear explanations, examples grounded in the document, and "
-                        "natural dialogue. Do not invent facts or add unrelated concepts. "
-                        "Return the script as plain text."
-                    ),
-                },
-                {
-                    "role": "user",
-                    "content": (
-                        "Create an educational podcast based on this document. "
-                        f"Document name: {metadata.get('filename', 'Document')}\n\n"
-                        f"{text[:10000]}"
-                    ),
-                },
-            ],
-            temperature=0.7,
-            max_tokens=3500,
+        text, metadata = get_document_text(request.docId)
+
+        if not text or not text.strip():
+            raise HTTPException(
+                status_code=400,
+                detail="The document contains no readable text."
+            )
+
+        doc_name = metadata.get("filename", "Document")
+
+        script = await generate_podcast(
+            text=text,
+            name=doc_name
         )
 
-        podcast = response.choices[0].message.content or ""
-
-        if not podcast.strip():
+        if not script or not script.strip():
             raise HTTPException(
                 status_code=502,
                 detail="The AI returned an empty podcast script."
             )
 
+        # Keep the response compatible with the existing frontend.
         return {
-            "podcast": podcast,
-            "docName": metadata.get("filename", "Document"),
+            "podcast": script,
+            "docName": doc_name
         }
 
     except HTTPException:
         raise
+
     except Exception as exc:
+        print(f"Podcast generation failed: {exc}")
         raise HTTPException(
             status_code=500,
             detail="Podcast generation failed."

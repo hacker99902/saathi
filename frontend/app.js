@@ -2381,15 +2381,35 @@ function dlFlashcards() {
 
 function parsePodcastScript(script) {
   const segments = [];
-  let currentSpeaker = 'Alex';
+  let currentSpeaker = 'Maya';
   let currentText = [];
 
   function saveSegment() {
-    const text = currentText.join(' ')
+    let text = currentText.join(' ')
+      .replace(/\[[^\]]*\]/g, ' ')
+      .replace(/\([^)]*(?:music|fade|intro|outro|sound effect)[^)]*\)/gi, ' ')
       .replace(/\*\*/g, '')
-      .replace(/\*/g, '')
-      .replace(/`/g, '')
+      .replace(/[*_`#|~]/g, ' ')
       .replace(/\s+/g, ' ')
+      .trim();
+
+    if (!text) {
+      currentText = [];
+      return;
+    }
+
+    // Remove common podcast introductions while preserving
+    // the actual educational discussion.
+    const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [];
+
+    text = sentences
+      .map(sentence => sentence.trim())
+      .filter(sentence =>
+        !/^(?:podcast title|episode|hosts?)\s*:/i.test(sentence) &&
+        !/^(?:welcome back|welcome to|and i'm (?:maya|alex)|i'm maya, your guide|i'm alex, the student)/i.test(sentence) &&
+        !/^(?:hello, listeners|hi, listeners|thanks for joining us)/i.test(sentence)
+      )
+      .join(' ')
       .trim();
 
     if (text) {
@@ -2405,17 +2425,27 @@ function parsePodcastScript(script) {
   for (const rawLine of script.split(/\r?\n/)) {
     const line = rawLine.trim();
 
-    // Ignore blank lines, headings, and divider lines.
+    // Skip blank lines, headings, timestamps and dividers.
     if (
       !line ||
       /^#{1,6}\s/.test(line) ||
       /^[-=_*]{3,}$/.test(line) ||
-      /^\(?\d{1,2}:\d{2}\s*[–—-]\s*\d{1,2}:\d{2}\)?$/.test(line)
+      /^\(?\d{1,2}:\d{2}(?:\s*[–—-]\s*\d{1,2}:\d{2})?\)?$/.test(line)
     ) {
       continue;
     }
 
-    // Recognize Maya/Alex labels, including Markdown bold.
+    // Ignore podcast metadata.
+    if (/^(?:podcast title|episode|hosts?)\s*:/i.test(line)) {
+      continue;
+    }
+
+    // Skip standalone stage directions.
+    if (/^\[[^\]]*\]$/.test(line)) {
+      continue;
+    }
+
+    // Recognize Maya, Alex and Both speaker labels.
     const match = line.match(
       /^\s*(?:\*\*)?\s*(MAYA|ALEX|BOTH)\s*:\s*(?:\*\*)?\s*(.*)$/i
     );
@@ -2423,12 +2453,11 @@ function parsePodcastScript(script) {
     if (match) {
       saveSegment();
 
-      currentSpeaker =
-        match[1].toUpperCase() === 'MAYA'
-          ? 'Maya'
-          : 'Alex';
+      const label = match[1].toUpperCase();
+      currentSpeaker = label === 'MAYA' ? 'Maya' : 'Alex';
 
-      if (match[1].toUpperCase() === 'BOTH') {
+      if (label === 'BOTH') {
+        // Avoid treating two voices as one speaker.
         currentText.push(match[2]);
       } else if (match[2]) {
         currentText.push(match[2]);
@@ -2437,7 +2466,7 @@ function parsePodcastScript(script) {
       continue;
     }
 
-    // Skip standalone timestamps and common Markdown metadata.
+    // Ignore other standalone metadata and directions.
     if (
       /^\(?\d{1,2}:\d{2}(?::\d{2})?\)?$/.test(line) ||
       /^\*\*(?:MAYA|ALEX|BOTH):\*\*$/i.test(line)
@@ -2445,7 +2474,6 @@ function parsePodcastScript(script) {
       continue;
     }
 
-    // Keep dialogue that continues onto the next line.
     currentText.push(line);
   }
 
@@ -2890,16 +2918,12 @@ function speakSentence(text, speaker) {
   return new Promise(resolve => {
     // Clean text before sending it to speech synthesis
     const cleanText = text
-      .replace(/```[\s\S]*?```/g, ' ')
-      .replace(/https?:\/\/\S+/g, ' ')
-      .replace(/[*_`#|~]/g, ' ')
-      .replace(/^\s*[-=]{3,}\s*$/gm, ' ')
-      .replace(/\b[\w.-]+\.pdf\b/gi, match =>
-        match.replace(/[_-]+/g, ' ').replace(/\.pdf$/i, ' PDF')
-      )
-      .replace(/[_-]+/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+  .replace(/\[[^\]]*\]/g, ' ')
+  .replace(/\([^)]*(?:music|fade|intro|outro)[^)]*\)/gi, ' ')
+  .replace(/https?:\/\/\S+/g, ' ')
+  .replace(/[*_`#|~]/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim();
 
     if (!cleanText) {
       resolve();
@@ -2908,48 +2932,36 @@ function speakSentence(text, speaker) {
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
 
+    // Identify the speaker
     const isMaya =
-      speaker.toLowerCase() === 'maya';
+      String(speaker || '').toLowerCase() === 'maya';
 
-    const voices = speechSynthesis.getVoices();
-
-    const englishVoices = voices.filter(v =>
-      v.lang &&
-      v.lang.toLowerCase().startsWith('en')
-    );
-
-    let voice = null;
-
-    if (isMaya) {
-      voice =
-        englishVoices.find(v => v.lang.toLowerCase() === 'en-in') ||
-        englishVoices.find(v => v.lang.toLowerCase() === 'en-gb') ||
-        englishVoices[0];
-
-      utterance.rate = 0.88 * S.podRate;
-      utterance.pitch = 1.08;
-    } else {
-      voice =
-        englishVoices.find(v => v.lang.toLowerCase() === 'en-us') ||
-        englishVoices.find(v => v.lang.toLowerCase() === 'en-au') ||
-        englishVoices[0];
-
-      utterance.rate = 0.96 * S.podRate;
-      utterance.pitch = 0.65;
-    }
+    // Select the voice using your existing helper function
+    const voice =
+      typeof getVoiceForSpeaker === 'function'
+        ? getVoiceForSpeaker(speaker)
+        : null;
 
     if (voice) {
       utterance.voice = voice;
       utterance.lang = voice.lang;
+    } else {
+      utterance.lang = 'en-US';
     }
 
+    // Different speaking styles for Maya and Alex
+    utterance.rate = (isMaya ? 0.88 : 0.96) * S.podRate;
+    utterance.pitch = isMaya ? 1.08 : 0.85;
     utterance.volume = 1;
+
+    // Resolve when speech finishes or errors
     utterance.onend = resolve;
     utterance.onerror = resolve;
 
     speechSynthesis.speak(utterance);
   });
 }
+
 
 function sync3DWithSpeaker(segment) {
 
@@ -3049,6 +3061,7 @@ function sync3DWithSpeaker(segment) {
 
   window.saathi3D.setSpeaker('');
 }
+
 function startMayaGestureCycle() {
   if (!window.saathi3D) return;
 
@@ -3426,53 +3439,53 @@ function togglePlay() {
  * and sound waves.
  */
 function updatePlayUI() {
-
-  const playBtn =
-    $('play-btn');
-
+  const playBtn = $('play-btn');
 
   if (playBtn) {
+    const isPlaying = S.podPlaying && !S.podPaused;
 
-    playBtn.textContent =
-      (
-        S.podPlaying &&
-        !S.podPaused
-      )
-        ? 'â¸ï¸'
-        : '▶️';
+    playBtn.innerHTML = isPlaying
+      ? `<svg xmlns="http://www.w3.org/2000/svg"
+             width="25" height="25" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round">
+           <rect x="6" y="4" width="4" height="16" rx="1"/>
+           <rect x="14" y="4" width="4" height="16" rx="1"/>
+         </svg>`
+      : `<svg xmlns="http://www.w3.org/2000/svg"
+             width="25" height="25" viewBox="0 0 24 24"
+             fill="currentColor">
+           <path d="M7 4.5v15l12-7.5z"/>
+         </svg>`;
 
+    playBtn.setAttribute(
+      'aria-label',
+      isPlaying ? 'Pause podcast' : 'Play podcast'
+    );
+
+    playBtn.setAttribute(
+      'title',
+      isPlaying ? 'Pause' : 'Play'
+    );
   }
 
-
-  const disc =
-    $('disc');
-
+  const disc = $('disc');
 
   if (disc) {
-
     disc.classList.toggle(
       'spin',
-      S.podPlaying &&
-      !S.podPaused
+      S.podPlaying && !S.podPaused
     );
-
   }
 
-
-  const waves =
-    $('waves');
-
+  const waves = $('waves');
 
   if (waves) {
-
     waves.classList.toggle(
       'active',
-      S.podPlaying &&
-      !S.podPaused
+      S.podPlaying && !S.podPaused
     );
-
   }
-
 }
 
 
@@ -4260,7 +4273,7 @@ function renderUserBadge() {
        onclick="signOut()"
        title="Sign out"
      >
-       â»
+       Sign out
      </button>`;
 
 }

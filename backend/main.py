@@ -17,6 +17,16 @@ from backend.services.rag_service import RAGService
 from backend.services.rag_retriever import RAGRetriever
 from backend.services.document_metadata import DocumentMetadataStore
 from backend.services.supabase_client import supabase
+from backend.services.groq_service import (
+    call,
+    rag_chat,
+    summarize,
+    flashcards,
+    podcast,
+    exam,
+    eval_answer,
+    compare,
+)
 
 # =========================================================
 # FastAPI Application
