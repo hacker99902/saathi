@@ -2885,10 +2885,28 @@ function pause(ms) {
  *
  * Otherwise the normal displayed text is spoken.
  */
+
 function speakSentence(text, speaker) {
   return new Promise(resolve => {
+    // Clean text before sending it to speech synthesis
+    const cleanText = text
+      .replace(/```[\s\S]*?```/g, ' ')
+      .replace(/https?:\/\/\S+/g, ' ')
+      .replace(/[*_`#|~]/g, ' ')
+      .replace(/^\s*[-=]{3,}\s*$/gm, ' ')
+      .replace(/\b[\w.-]+\.pdf\b/gi, match =>
+        match.replace(/[_-]+/g, ' ').replace(/\.pdf$/i, ' PDF')
+      )
+      .replace(/[_-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
 
-    const utterance = new SpeechSynthesisUtterance(text);
+    if (!cleanText) {
+      resolve();
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
 
     const isMaya =
       speaker.toLowerCase() === 'maya';
@@ -2903,41 +2921,29 @@ function speakSentence(text, speaker) {
     let voice = null;
 
     if (isMaya) {
-
-      // Maya
       voice =
-        englishVoices.find(v => v.lang === 'en-IN') ||
-        englishVoices.find(v => v.lang === 'en-GB') ||
+        englishVoices.find(v => v.lang.toLowerCase() === 'en-in') ||
+        englishVoices.find(v => v.lang.toLowerCase() === 'en-gb') ||
         englishVoices[0];
 
       utterance.rate = 0.88 * S.podRate;
       utterance.pitch = 1.08;
-
     } else {
-
-      // Alex
       voice =
-        englishVoices.find(v => v.lang === 'en-US') ||
-        englishVoices.find(v => v.lang === 'en-AU') ||
+        englishVoices.find(v => v.lang.toLowerCase() === 'en-us') ||
+        englishVoices.find(v => v.lang.toLowerCase() === 'en-au') ||
         englishVoices[0];
 
       utterance.rate = 0.96 * S.podRate;
-
-      // Lower pitch to create a deeper male-like character
       utterance.pitch = 0.65;
     }
 
     if (voice) {
       utterance.voice = voice;
       utterance.lang = voice.lang;
-
-      console.log(
-        `${speaker} → ${voice.name} | ${voice.lang} | pitch ${utterance.pitch}`
-      );
     }
 
     utterance.volume = 1;
-
     utterance.onend = resolve;
     utterance.onerror = resolve;
 
