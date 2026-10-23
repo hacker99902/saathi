@@ -1,5 +1,5 @@
 ﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   SAATHI AI v2 â€” Complete Frontend Application
+   SAATHI AI v2 — Complete Frontend Application
    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 'use strict';
 
@@ -244,7 +244,7 @@ async function boot() {
 
   const token = localStorage.getItem(TK);
 
-  // No token â†’ go directly to login
+  // No token → go directly to login
   if (!token) {
     location.replace('login.html');
     return;
@@ -320,7 +320,7 @@ function applyTheme(t) {
 
   if (btn) {
     btn.textContent =
-      t === 'dark' ? 'â˜€ï¸' : 'ðŸŒ™';
+      t === 'dark' ? '☀️' : '🌙';
   }
 }
 
@@ -453,7 +453,7 @@ function showBanner() {
 
 
   b.innerHTML =
-    'âš ï¸ Cannot reach backend on port 3001. ' +
+    '⚠️ Cannot reach backend on port 3001. ' +
     'Run <code>npm run dev</code> in ' +
     '<code>saathi/backend</code> ' +
     '<button onclick="location.reload()">Retry</button>';
@@ -897,7 +897,7 @@ function renderDocs() {
 
     list.innerHTML =
       '<div class="doc-empty" id="doc-empty">' +
-      '<div style="font-size:32px;margin-bottom:8px">ðŸ“‚</div>' +
+      '<div style="font-size:32px;margin-bottom:8px">📂</div>' +
       '<p>No documents yet</p>' +
       '<p style="font-size:11px;margin-top:4px;color:var(--text-muted)">' +
       'Upload files to get started' +
@@ -941,8 +941,8 @@ function renderDocs() {
 
     const icon =
       ext === 'PDF'
-        ? 'ðŸ“•'
-        : 'ðŸ“„';
+        ? '📕'
+        : '📄';
 
 
     el.innerHTML = `
@@ -958,8 +958,8 @@ function renderDocs() {
         </div>
 
         <div class="doc-meta">
-          ${doc.pageCount || '?'}p Â·
-          ${doc.chunkCount || '?'} chunks Â·
+          ${doc.pageCount || '?'}p ·
+          ${doc.chunkCount || '?'} chunks ·
           ${fmtBytes(doc.size)}
         </div>
       </div>
@@ -972,7 +972,7 @@ function renderDocs() {
         class="doc-del"
         title="Delete"
       >
-        Ã—
+        ×
       </button>
     `;
 
@@ -1141,12 +1141,12 @@ function openDoc(id) {
 
 
   $('ws-meta').textContent =
-    `${doc?.pageCount || '?'} pages Â· ` +
+    `${doc?.pageCount || '?'} pages · ` +
     `${doc?.chunkCount || '?'} chunks`;
 
 
   $('active-indicator').textContent =
-    `ðŸ“„ ${doc?.originalName || ''}`;
+    `📄 ${doc?.originalName || ''}`;
 
 
   const cw =
@@ -1268,7 +1268,7 @@ function startMulti() {
 
 
   $('active-indicator').textContent =
-    `âš¡ ${ids.length} docs`;
+    `⚡ ${ids.length} docs`;
 
   const mobileSelectedDocs =
     $('mobile-selected-documents');
@@ -1284,7 +1284,7 @@ function startMulti() {
         return `
         <div class="mobile-active-doc">
           <span class="mobile-active-doc-icon">
-            ðŸ“„
+            📄
           </span>
 
           <span>
@@ -1325,11 +1325,11 @@ function startMulti() {
 
     cw.innerHTML = `
       <div class="cw-icon">
-        âš¡
+        ⚡
       </div>
 
       <p>
-        Multi-doc chat active â€”
+        Multi-doc chat active —
         <strong>
           ${ids.length} documents
         </strong>
@@ -1390,7 +1390,7 @@ async function delDoc(id, name) {
 
 
     toast(
-      `ðŸ—‘ï¸ Deleted "${name}"`,
+      `🗑️ Deleted "${name}"`,
       'info'
     );
 
@@ -1607,7 +1607,7 @@ function appendAIMsg(
 
 
   d.innerHTML =
-    `<div class="msg-avatar">ðŸ¤–</div>
+    `<div class="msg-avatar">🤖</div>
      <div class="msg-body">
 
        <div class="msg-bubble fmt">
@@ -1657,8 +1657,8 @@ function appendAIMsg(
 
           tog.textContent =
             list.style.display === 'none'
-              ? 'â–¼'
-              : 'â–²';
+              ? '▼'
+              : '▲';
 
         }
 
@@ -1707,11 +1707,11 @@ function buildSources(srcs) {
 
       <div class="sources-hdr">
         <span>
-          ðŸ“Ž Sources (${srcs.length})
+          📎Sources (${srcs.length})
         </span>
 
         <span class="src-toggle">
-          â–²
+          ▲
         </span>
       </div>
 
@@ -1751,7 +1751,7 @@ function showTyping() {
          border:1px solid var(--border)
        "
      >
-       ðŸ¤–
+       🤖
      </div>
 
      <div class="typing-dots">
@@ -1832,7 +1832,7 @@ function renderChatWelcome() {
      >
 
        <div class="cw-icon">
-         ðŸ¤–
+         🤖
        </div>
 
        <p id="cw-text">
@@ -1848,19 +1848,19 @@ function renderChatWelcome() {
        >
 
          <button class="chip">
-           ðŸ“‹ What is this document about?
+           📋 What is this document about?
          </button>
 
          <button class="chip">
-           ðŸ”‘ List the key points
+           🔑 List the key points
          </button>
 
          <button class="chip">
-           ðŸ’¡ What are the main conclusions?
+           💡 What are the main conclusions?
          </button>
 
          <button class="chip">
-           â“ Explain the most important concept
+           ❓ Explain the most important concept
          </button>
 
        </div>
@@ -1962,7 +1962,7 @@ async function genSummary() {
 
 
     toast(
-      'âœ… Summary ready!',
+      '✅ Summary ready!',
       'success'
     );
 
@@ -1970,7 +1970,7 @@ async function genSummary() {
 
     $('summary-out').innerHTML =
       `<div class="placeholder">
-         âŒ<br/>
+         ❌<br/>
          ${esc(e.message)}
        </div>`;
 
@@ -1985,7 +1985,7 @@ async function genSummary() {
     btn.disabled = false;
 
     btn.textContent =
-      'âœ¨ Generate Summary';
+      '✨ Generate Summary';
 
   }
 
@@ -2101,7 +2101,7 @@ async function genFlashcards() {
 
 
     toast(
-      `ðŸƒ ${S.flashcards.length} flashcards ready!`,
+      `🏆 ${S.flashcards.length} flashcards ready!`,
       'success'
     );
 
@@ -2109,7 +2109,7 @@ async function genFlashcards() {
 
     $('fc-area').innerHTML =
       `<div class="placeholder">
-         âŒ<br/>
+         ❌<br/>
          ${esc(e.message)}
        </div>`;
 
@@ -2124,7 +2124,7 @@ async function genFlashcards() {
     btn.disabled = false;
 
     btn.textContent =
-      'ðŸƒ Generate Flashcards';
+      '🏆 Generate Flashcards';
 
   }
 
@@ -2195,10 +2195,10 @@ function renderFC(cards) {
 
       const dIcon =
         {
-          easy: 'ðŸŸ¢',
-          medium: 'ðŸŸ¡',
-          hard: 'ðŸ”´'
-        }[dCls] || 'ðŸŸ¡';
+          easy: '🟢',
+          medium: '🟡',
+          hard: '🔴'
+        }[dCls] || '🟡';
 
 
       const dLabel =
@@ -2235,7 +2235,7 @@ function renderFC(cards) {
 
           <div class="fc-hint">
             <span class="fc-hint-icon">
-              ðŸ‘†
+              👆
             </span>
 
             <span>
@@ -2248,7 +2248,7 @@ function renderFC(cards) {
         <div class="fc-back">
 
           <div class="fc-back-label">
-            âœ… Answer
+            ✅ Answer
           </div>
 
           <div class="fc-topic">
@@ -2379,6 +2379,80 @@ function dlFlashcards() {
    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 
+function parsePodcastScript(script) {
+  const segments = [];
+  let currentSpeaker = 'Alex';
+  let currentText = [];
+
+  function saveSegment() {
+    const text = currentText.join(' ')
+      .replace(/\*\*/g, '')
+      .replace(/\*/g, '')
+      .replace(/`/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (text) {
+      segments.push({
+        speaker: currentSpeaker,
+        text
+      });
+    }
+
+    currentText = [];
+  }
+
+  for (const rawLine of script.split(/\r?\n/)) {
+    const line = rawLine.trim();
+
+    // Ignore blank lines, headings, and divider lines.
+    if (
+      !line ||
+      /^#{1,6}\s/.test(line) ||
+      /^[-=_*]{3,}$/.test(line) ||
+      /^\(?\d{1,2}:\d{2}\s*[–—-]\s*\d{1,2}:\d{2}\)?$/.test(line)
+    ) {
+      continue;
+    }
+
+    // Recognize Maya/Alex labels, including Markdown bold.
+    const match = line.match(
+      /^\s*(?:\*\*)?\s*(MAYA|ALEX|BOTH)\s*:\s*(?:\*\*)?\s*(.*)$/i
+    );
+
+    if (match) {
+      saveSegment();
+
+      currentSpeaker =
+        match[1].toUpperCase() === 'MAYA'
+          ? 'Maya'
+          : 'Alex';
+
+      if (match[1].toUpperCase() === 'BOTH') {
+        currentText.push(match[2]);
+      } else if (match[2]) {
+        currentText.push(match[2]);
+      }
+
+      continue;
+    }
+
+    // Skip standalone timestamps and common Markdown metadata.
+    if (
+      /^\(?\d{1,2}:\d{2}(?::\d{2})?\)?$/.test(line) ||
+      /^\*\*(?:MAYA|ALEX|BOTH):\*\*$/i.test(line)
+    ) {
+      continue;
+    }
+
+    // Keep dialogue that continues onto the next line.
+    currentText.push(line);
+  }
+
+  saveSegment();
+  return segments.filter(segment => segment.text);
+}
+
 async function genPodcast() {
   const id = S.activeDocId;
 
@@ -2402,19 +2476,8 @@ async function genPodcast() {
     }
 
     // Convert the returned script into playable dialogue segments.
-    S.podSegs = S.podScript
-      .split(/\n+/)
-      .map(line => line.trim())
-      .filter(Boolean)
-      .map(line => {
-        const match = line.match(/^(Alex|Maya)\s*:\s*(.*)$/i);
+    S.podSegs = parsePodcastScript(S.podScript);
 
-        return {
-          speaker: match ? match[1] : 'Alex',
-          text: match ? match[2] : line
-        };
-      })
-      .filter(segment => segment.text);
 
     if (!S.podSegs.length) {
       throw new Error('No playable dialogue was found in the script.');
@@ -2869,7 +2932,7 @@ function speakSentence(text, speaker) {
       utterance.lang = voice.lang;
 
       console.log(
-        `${speaker} â†’ ${voice.name} | ${voice.lang} | pitch ${utterance.pitch}`
+        `${speaker} → ${voice.name} | ${voice.lang} | pitch ${utterance.pitch}`
       );
     }
 
@@ -3370,7 +3433,7 @@ function updatePlayUI() {
         !S.podPaused
       )
         ? 'â¸ï¸'
-        : 'â–¶ï¸';
+        : '▶️';
 
   }
 
@@ -3737,7 +3800,7 @@ async function genExam() {
 
 
     toast(
-      `ðŸŽ“ ${S.examQs.length} questions ready!`,
+      `🎓 ${S.examQs.length} questions ready!`,
       'success'
     );
 
@@ -3745,7 +3808,7 @@ async function genExam() {
 
     $('exam-area').innerHTML =
       `<div class="placeholder">
-         âŒ<br/>
+         ❌<br/>
          ${esc(e.message)}
        </div>`;
 
@@ -3760,7 +3823,7 @@ async function genExam() {
     btn.disabled = false;
 
     btn.textContent =
-      'ðŸŽ“ Start Exam';
+      '🎓 Start Exam';
 
   }
 
@@ -3976,7 +4039,7 @@ function updateScore() {
         S.examAnswered *
         100
       ) + '%'
-      : 'â€”';
+      : '—';
 
 }
 
@@ -4081,21 +4144,21 @@ function resetPanels() {
 
   $('summary-out').innerHTML =
     `<div class="placeholder">
-       ðŸ“<br/>
+       📝<br/>
        Click Generate to create a summary
      </div>`;
 
 
   $('fc-area').innerHTML =
     `<div class="placeholder">
-       ðŸƒ<br/>
+       🏆<br/>
        Generate flashcards to start studying
      </div>`;
 
 
   $('exam-area').innerHTML =
     `<div class="placeholder">
-       ðŸŽ“<br/>
+       🎓<br/>
        Start an exam to test your knowledge
      </div>`;
 
@@ -4284,10 +4347,10 @@ function toast(
 ) {
 
   const icons = {
-    success: 'âœ…',
-    error: 'âŒ',
-    warning: 'âš ï¸',
-    info: 'â„¹ï¸'
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️'
   };
 
 
@@ -4303,7 +4366,7 @@ function toast(
 
   el.innerHTML =
     `<span>
-       ${icons[type] || 'â„¹ï¸'}
+       ${icons[type] || 'ℹ️'}
      </span>
 
      <span style="flex:1">
@@ -4311,7 +4374,7 @@ function toast(
      </span>
 
      <span class="toast-close">
-       Ã—
+       ×
      </span>`;
 
 
@@ -4436,7 +4499,7 @@ function renderMd(text) {
     )
 
     .replace(
-      /^[â€¢\-\*] (.+)$/gm,
+      /^[•\-\*] (.+)$/gm,
       '<li>$1</li>'
     )
 
@@ -4758,7 +4821,7 @@ function renderMobileDocuments() {
       <div class="mobile-history-empty">
 
         <div class="mobile-history-empty-icon">
-          ðŸ“‚
+          📂
         </div>
 
         <h3>No documents yet</h3>
@@ -4842,7 +4905,7 @@ function renderMobileDocuments() {
       }"
       >
 
-        <span class="checkmark">âœ“</span>
+        <span class="checkmark">✓</span>
 
       </button>
 
@@ -4850,7 +4913,7 @@ function renderMobileDocuments() {
       <!-- Document icon -->
 
       <div class="mobile-history-icon">
-        ðŸ“„
+        📄
       </div>
 
 
@@ -4871,7 +4934,7 @@ function renderMobileDocuments() {
           ${doc.pageCount || 0}
           pages
 
-          Â·
+          ·
 
           ${doc.chunkCount || 0}
           chunks
@@ -4884,7 +4947,7 @@ function renderMobileDocuments() {
       <!-- Open arrow -->
 
       <div class="mobile-history-arrow">
-        â†’
+        →
       </div>
 
     `;
@@ -4982,7 +5045,7 @@ function renderMobileDocuments() {
         /*
          * Update:
          * "2 selected"
-         * "âš¡ Chat with 2 documents"
+         * "⚡ Chat with 2 documents"
          */
 
         updateMobileMultiActions();
@@ -5436,7 +5499,7 @@ function updateMobileMultiActions() {
       chatBtn.disabled = false;
 
       chatBtn.textContent =
-        'ðŸ’¬ Chat with this document';
+        '💬 Chat with this document';
 
     }
 
@@ -5453,7 +5516,7 @@ function updateMobileMultiActions() {
     chatBtn.disabled = false;
 
     chatBtn.textContent =
-      `âš¡ Chat with ${selected} documents`;
+      `⚡ Chat with ${selected} documents`;
 
   }
 }
