@@ -200,68 +200,44 @@ def chat(
                     detail="Document not found.",
                 )
 
-        results = []
-
-        for document_id in document_ids:
-            # Use a separate session for each document.
-            session_id = f"{request.session_id or 'default'}_{document_id}"
+            
+        if len(document_ids) == 1:
+            session_id = (
+                f"{request.session_id or 'default'}_{document_ids[0]}"
+            )
 
             result = rag_service.ask(
-                document_id=document_id,
+                document_id=document_ids[0],
                 question=question,
                 session_id=session_id,
                 user_id=user_id,
             )
-
-            # Preserve original fields and add consistent aliases
-            # for frontend source rendering.
-            normalized_sources = []
-
-            for source in result.get("sources", []):
-                source = dict(source)
-
-                page = source.get(
-                    "page",
-                    source.get("page_number"),
-                )
-                quote = source.get(
-                    "quote",
-                    source.get("text", ""),
-                )
-
-                source["page"] = page
-                source["quote"] = quote
-
-                normalized_sources.append(source)
-
-            results.append({
-                **result,
-                "sources": normalized_sources,
-            })
-
-        if len(results) == 1:
-            answer = results[0]["answer"]
-            sources = results[0]["sources"]
         else:
-            answer = "\n\n".join(
-                result["answer"] for result in results
+            result = rag_service.ask_multiple(
+                document_ids=document_ids,
+                question=question,
+                session_id=request.session_id or "default",
+                user_id=user_id,
             )
-            sources = [
-                source
-                for result in results
-                for source in result["sources"]
-            ]
+
+        sources = []
+        for source in result.get("sources", []):
+            source = dict(source)
+            source["page"] = source.get(
+                "page", source.get("page_number")
+            )
+            source["quote"] = source.get(
+                "quote", source.get("text", "")
+            )
+            sources.append(source)
 
         return {
-            "document_id": (
-                document_ids[0]
-                if len(document_ids) == 1
-                else document_ids
-            ),
+            "document_id": result["document_id"],
             "question": question,
-            "answer": answer,
+            "answer": result["answer"],
             "sources": sources,
         }
+
 
     except HTTPException:
         raise

@@ -288,6 +288,231 @@ class RAGService:
             "sources": sources,
         }
 
+    
+    def ask_multiple(
+        self,
+        document_ids: list[str],
+        question: str,
+        session_id: str,
+        user_id: str,
+        top_k: int = 5,
+        similarity_threshold: float = 0.40,
+    ):
+        """Retrieve across documents and generate one combined answer."""
+        import hashlib
+
+        document_ids = list(dict.fromkeys(
+            doc_id.strip()
+            for doc_id in document_ids
+            if isinstance(doc_id, str) and doc_id.strip()
+        ))
+
+        if not document_ids:
+            raise ValueError("At least one document is required.")
+
+        if not question or not question.strip():
+            raise ValueError("Question cannot be empty.")
+
+        if not user_id or not user_id.strip():
+            raise ValueError("User ID cannot be empty.")
+
+        if not session_id or not session_id.strip():
+            raise ValueError("Session ID cannot be empty.")
+
+        if not isinstance(top_k, int) or isinstance(top_k, bool) or top_k < 1:
+            raise ValueError("top_k must be a positive integer.")
+
+        if not 0.0 <= similarity_threshold <= 1.0:
+            raise ValueError("similarity_threshold must be between 0 and 1.")
+
+        question = question.strip()
+        user_id = user_id.strip()
+
+        # Give this combination of documents its own chat identity.
+        identity = hashlib.sha256(
+            "|".join(sorted(document_ids)).encode("utf-8")
+        ).hexdigest()[:24]
+
+        combined_document_id = f"multi_{identity}"
+        combined_session_id = f"{session_id.strip()}_multi_{identity}"
+
+        if len(combined_session_id) > 200:
+            raise ValueError("Session ID is too long.")
+
+        if not self.chat_memory.ensure_session(
+            session_id=combined_session_id,
+            document_id=combined_document_id,
+            user_id=user_id,
+        ):
+            raise ValueError("Invalid multi-document chat session.")
+
+        history = self.chat_memory.get_history(
+            session_id=combined_session_id,
+            document_id=combined_document_id,
+        )
+
+        retrieval_query = rewrite_question_for_retrieval(
+            question=question,
+            history=history,
+        )
+        normalized_query = normalize_query(retrieval_query)
+
+        if not normalized_query:
+            raise ValueError("Search query cannot be empty.")
+
+        retrieval_top_k = max(top_k * 4, 20)
+        semantic_threshold = 0.25
+        keyword_threshold = min(
+            float(similarity_threshold),
+            self.hybrid_retriever.keyword_weight * 0.5,
+        )
+
+        all_candidates = []
+
+        # Retrieve from every selected document.
+        for document_id in document_ids:
+            vector_store = self.retriever.load_document(document_id)
+
+            semantic_candidates = vector_store.search(
+                query=normalized_query,
+                top_k=retrieval_top_k,
+            )
+
+            keyword_candidates = self.retriever.keyword_search(
+                document_id=document_id,
+                query=normalized_query,
+                top_k=retrieval_top_k,
+            )
+
+            candidates = self.hybrid_retriever.combine(
+                semantic_results=semantic_candidates,
+                keyword_results=keyword_candidates,
+                top_k=retrieval_top_k,
+            )
+
+            for result in candidates:
+                semantic_score = result.get("semantic_score", 0.0)
+                keyword_score = result.get("keyword_score", 0.0)
+                hybrid_score = result.get("hybrid_score", 0.0)
+
+                semantic_match = (
+                    semantic_score >= semantic_threshold
+                    and hybrid_score >= similarity_threshold
+                )
+                keyword_match = (
+                    keyword_score > 0.0
+                    and hybrid_score >= keyword_threshold
+                )
+
+                if semantic_match or keyword_match:
+                    # Preserve which document supplied this chunk.
+                    all_candidates.append({
+                        **result,
+                        "document_id": document_id,
+                    })
+
+        # Remove duplicate text while retaining document attribution.
+        unique_candidates = []
+        seen = set()
+
+        for result in all_candidates:
+            text = result.get("text", "")
+            if not isinstance(text, str) or not text.strip():
+                continue
+
+            key = (
+                result["document_id"],
+                self._normalize_text(text),
+            )
+            if key in seen:
+                continue
+
+            seen.add(key)
+            unique_candidates.append(result)
+
+        selected_sources = self._select_diverse_sources(
+            unique_candidates,
+            max_sources=min(top_k, 6),
+        )
+
+        self.chat_memory.add_message(
+            session_id=combined_session_id,
+            role="user",
+            content=question,
+        )
+
+        if not selected_sources:
+            answer = (
+                "I couldn't find enough relevant information "
+                "in the selected documents to answer that question."
+            )
+            self.chat_memory.add_message(
+                session_id=combined_session_id,
+                role="assistant",
+                content=answer,
+            )
+            return {
+                "document_id": document_ids,
+                "question": question,
+                "answer": answer,
+                "sources": [],
+            }
+
+        context_parts = []
+        sources = []
+
+        for source_id, result in enumerate(selected_sources, start=1):
+            document_id = result["document_id"]
+            page_number = result.get(
+                "page_number",
+                result.get("page", 1),
+            )
+            text = result["text"]
+
+            context_parts.append(
+                f"[Source {source_id}] "
+                f"Document ID: {document_id}; "
+                f"Page {page_number}\n{text}"
+            )
+
+            sources.append({
+                "source_id": source_id,
+                "document_id": document_id,
+                "page_number": page_number,
+                "similarity_score": round(
+                    result.get("semantic_score", 0.0), 4
+                ),
+                "keyword_score": round(
+                    result.get("keyword_score", 0.0), 4
+                ),
+                "hybrid_score": round(
+                    result.get("hybrid_score", 0.0), 4
+                ),
+                "text": text,
+            })
+
+        context = "\n\n".join(context_parts)
+
+        answer = generate_answer_with_history(
+            question=question,
+            context=context,
+            history=history,
+        )
+
+        self.chat_memory.add_message(
+            session_id=combined_session_id,
+            role="assistant",
+            content=answer,
+        )
+
+        return {
+            "document_id": document_ids,
+            "question": question,
+            "answer": answer,
+            "sources": sources,
+        }
+
+
 
 # Shared instance used by main.py and document_history.py
 rag_service = RAGService()
