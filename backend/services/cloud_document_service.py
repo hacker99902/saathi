@@ -1,5 +1,6 @@
 
 from io import BytesIO
+
 from pypdf import PdfReader
 from fastapi import HTTPException
 
@@ -10,8 +11,8 @@ metadata_store = DocumentMetadataStore()
 BUCKET_NAME = "saathi-documents"
 
 
-def get_document_text(document_id: str):
-    metadata = metadata_store.get(document_id)
+def get_document_text(document_id: str, user_id: str):
+    metadata = metadata_store.get(document_id, user_id)
 
     if not metadata:
         raise HTTPException(
@@ -20,6 +21,7 @@ def get_document_text(document_id: str):
         )
 
     storage_path = metadata.get("storage_path")
+    storage_bucket = metadata.get("storage_bucket", BUCKET_NAME)
 
     if not storage_path:
         raise HTTPException(
@@ -30,7 +32,7 @@ def get_document_text(document_id: str):
     try:
         pdf_bytes = (
             supabase.storage
-            .from_(BUCKET_NAME)
+            .from_(storage_bucket)
             .download(storage_path)
         )
 

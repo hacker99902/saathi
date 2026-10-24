@@ -1,221 +1,173 @@
 
-from typing import List, Dict
+from typing import Dict, List
+import math
 
 
 class HybridRetriever:
-
     def __init__(
         self,
         semantic_weight: float = 0.70,
-        keyword_weight: float = 0.30
+        keyword_weight: float = 0.30,
     ):
-
-        if semantic_weight < 0:
+        if (
+            not isinstance(semantic_weight, (int, float))
+            or isinstance(semantic_weight, bool)
+            or not math.isfinite(semantic_weight)
+            or semantic_weight < 0
+        ):
             raise ValueError(
-                "semantic_weight cannot be negative."
+                "semantic_weight must be a finite, non-negative number."
             )
 
-        if keyword_weight < 0:
+        if (
+            not isinstance(keyword_weight, (int, float))
+            or isinstance(keyword_weight, bool)
+            or not math.isfinite(keyword_weight)
+            or keyword_weight < 0
+        ):
             raise ValueError(
-                "keyword_weight cannot be negative."
+                "keyword_weight must be a finite, non-negative number."
             )
 
-        if semantic_weight + keyword_weight == 0:
+        total = semantic_weight + keyword_weight
+
+        if total <= 0 or not math.isfinite(total):
             raise ValueError(
-                "At least one retrieval weight must be greater than 0."
+                "At least one retrieval weight must be greater than zero."
             )
 
-        total = (
-            semantic_weight
-            + keyword_weight
-        )
+        self.semantic_weight = semantic_weight / total
+        self.keyword_weight = keyword_weight / total
 
-        self.semantic_weight = (
-            semantic_weight / total
-        )
+    @staticmethod
+    def _valid_score(value) -> float:
+        """Convert a valid numeric score to a finite float."""
+        if isinstance(value, bool):
+            return 0.0
 
-        self.keyword_weight = (
-            keyword_weight / total
-        )
+        try:
+            score = float(value)
+        except (TypeError, ValueError):
+            return 0.0
 
-    # ==================================================
-    # HYBRID SEARCH
-    # ==================================================
+        return score if math.isfinite(score) else 0.0
+
+    @staticmethod
+    def _valid_chunk_id(result):
+        if not isinstance(result, dict):
+            return None
+
+        chunk_id = result.get("chunk_id")
+
+        if chunk_id is None or str(chunk_id).strip() == "":
+            return None
+
+        return str(chunk_id)
 
     def combine(
         self,
         semantic_results: List[Dict],
         keyword_results: List[Dict],
-        top_k: int = 5
+        top_k: int = 5,
     ) -> List[Dict]:
-
-        if top_k <= 0:
-            return []
+        if (
+            not isinstance(top_k, int)
+            or isinstance(top_k, bool)
+            or top_k < 1
+        ):
+            raise ValueError("top_k must be a positive integer.")
 
         combined = {}
 
-        print("\n--- SEMANTIC CHUNK IDS ---")
-        for result in semantic_results:
-            print(
-                "Chunk ID:", result["chunk_id"],
-                "| Page:", result.get("page_number"),
-                "| Score:", result["similarity_score"]
+        # Normalize keyword scores relative to the strongest positive
+        # BM25 result returned for this query.
+        valid_keyword_results = []
+
+        for result in keyword_results or []:
+            chunk_id = self._valid_chunk_id(result)
+
+            if chunk_id is None:
+                continue
+
+            raw_score = self._valid_score(
+                result.get("keyword_score")
             )
 
-        print("\n--- KEYWORD CHUNK IDS ---")
-        for result in keyword_results:
-            print(
-                "Chunk ID:", result["chunk_id"],
-                "| Page:", result.get("page_number"),
-                "| Score:", result["keyword_score"]
+            valid_keyword_results.append(
+                (chunk_id, result, raw_score)
             )
 
-        # ----------------------------------------------
-        # Add semantic results
-        # ----------------------------------------------
+        max_keyword_score = max(
+            (
+                score
+                for _, _, score in valid_keyword_results
+                if score > 0
+            ),
+            default=0.0,
+        )
 
-        for result in semantic_results:
+        # Add semantic candidates.
+        for result in semantic_results or []:
+            chunk_id = self._valid_chunk_id(result)
 
-            chunk_id = result["chunk_id"]
+            if chunk_id is None:
+                continue
 
-            semantic_score = float(
-                result["similarity_score"]
+            semantic_score = self._valid_score(
+                result.get("similarity_score")
             )
 
             combined[chunk_id] = {
                 **result,
-
+                "chunk_id": chunk_id,
                 "semantic_score": semantic_score,
-
                 "keyword_score": 0.0,
-
+                "keyword_raw_score": 0.0,
                 "hybrid_score": (
-                    self.semantic_weight
-                    * semantic_score
-                )
+                    self.semantic_weight * semantic_score
+                ),
             }
 
-        # ----------------------------------------------
-        # Find maximum positive BM25 score
-        # ----------------------------------------------
-
-        positive_keyword_scores = [
-            float(result["keyword_score"])
-            for result in keyword_results
-            if float(result["keyword_score"]) > 0
-        ]
-
-        max_keyword_score = (
-            max(positive_keyword_scores)
-            if positive_keyword_scores
-            else 0.0
-        )
-
-        # ----------------------------------------------
-        # Add keyword results
-        # ----------------------------------------------
-
-        for result in keyword_results:
-
-            chunk_id = result["chunk_id"]
-
-            raw_keyword_score = float(
-                result["keyword_score"]
+        # Merge keyword candidates with semantic candidates.
+        for chunk_id, result, raw_score in valid_keyword_results:
+            normalized_keyword_score = (
+                raw_score / max_keyword_score
+                if max_keyword_score > 0 and raw_score > 0
+                else 0.0
             )
 
-            # Normalize BM25 against the strongest
-            # keyword result.
-            if (
-                max_keyword_score > 0
-                and raw_keyword_score > 0
-            ):
-
-                keyword_score = (
-                    raw_keyword_score
-                    /
-                    max_keyword_score
-                )
-
-            else:
-
-                keyword_score = 0.0
-
             if chunk_id not in combined:
-
                 combined[chunk_id] = {
                     **result,
-
+                    "chunk_id": chunk_id,
                     "semantic_score": 0.0,
-
-                    "keyword_score": raw_keyword_score,
-
+                    "similarity_score": 0.0,
+                    "keyword_score": normalized_keyword_score,
+                    "keyword_raw_score": raw_score,
                     "hybrid_score": (
                         self.keyword_weight
-                        * keyword_score
-                    )
+                        * normalized_keyword_score
+                    ),
                 }
-
             else:
+                item = combined[chunk_id]
 
-                combined[chunk_id][
-                    "keyword_score"
-                ] = raw_keyword_score
+                # Keep the best positive keyword score if duplicates
+                # exist in the keyword result list.
+                if normalized_keyword_score > item["keyword_score"]:
+                    item["keyword_score"] = normalized_keyword_score
+                    item["keyword_raw_score"] = raw_score
 
-                semantic_score = combined[
-                    chunk_id
-                ]["semantic_score"]
-
-                combined[chunk_id][
-                    "hybrid_score"
-                ] = (
-                    self.semantic_weight
-                    * semantic_score
-                    +
-                    self.keyword_weight
-                    * keyword_score
+                item["hybrid_score"] = (
+                    self.semantic_weight * item["semantic_score"]
+                    + self.keyword_weight * item["keyword_score"]
                 )
-
-        # ----------------------------------------------
-        # Sort by hybrid score
-        # ----------------------------------------------
-
-        results = list(
-            combined.values()
-        )
-
-                # ----------------------------------------------
-        # Sort by hybrid score
-        # ----------------------------------------------
 
         results = list(combined.values())
 
         results.sort(
-            key=lambda result: result["hybrid_score"],
-            reverse=True
+            key=lambda item: item["hybrid_score"],
+            reverse=True,
         )
-
-        print("\n--- HYBRID RETRIEVAL SUMMARY ---")
-        print("Semantic candidates:", len(semantic_results))
-        print("Keyword candidates:", len(keyword_results))
-        print("Unique combined candidates:", len(results))
-        print("Requested top_k:", top_k)
-        print("Returned candidates:", min(len(results), top_k))
-
-        print("\n--- TOP HYBRID CANDIDATES ---")
-
-        for result in results[:top_k]:
-            print(
-                "Page:", result.get("page_number"),
-                "| Semantic:", round(
-                    result.get("semantic_score", 0.0), 4
-                ),
-                "| Keyword:", round(
-                    result.get("keyword_score", 0.0), 4
-                ),
-                "| Hybrid:", round(
-                    result.get("hybrid_score", 0.0), 4
-                ),
-                "| Chunk ID:", result.get("chunk_id")
-            )
 
         return results[:top_k]
