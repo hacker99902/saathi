@@ -1,550 +1,293 @@
 
-import numpy as np
-
 from .rag_retriever import RAGRetriever
-
 from .llm_service import (
     generate_answer_with_history,
-    rewrite_question_for_retrieval
+    rewrite_question_for_retrieval,
 )
-
 from .chat_memory import ChatMemory
-
 from .text_utils import normalize_query
-
 from .hybrid_retriever import HybridRetriever
 
 
 class RAGService:
-
     def __init__(self):
-
-        # Retriever used for document processing
         self.retriever = RAGRetriever()
 
-        # Conversation memory
-        self.chat_memory = ChatMemory(
-            max_messages=10
-        )
+        self.chat_memory = ChatMemory(max_messages=10)
 
-        # Hybrid semantic + keyword retriever
         self.hybrid_retriever = HybridRetriever(
             semantic_weight=0.70,
-            keyword_weight=0.30
+            keyword_weight=0.30,
         )
 
-    # ==================================================
-    # Remove exact duplicate chunks
-    # ==================================================
+    @staticmethod
+    def _normalize_text(text: str) -> str:
+        return " ".join(text.lower().split())
 
-    def _remove_duplicate_sources(
-        self,
-        results
-    ):
-
+    def _remove_duplicate_sources(self, results):
         unique_results = []
-
         seen_texts = set()
 
         for result in results:
+            text = result.get("text", "")
 
-            text = result["text"].strip()
-
-            normalized_text = " ".join(
-                text.lower().split()
-            )
-
-            if normalized_text in seen_texts:
+            if not isinstance(text, str) or not text.strip():
                 continue
 
-            seen_texts.add(
-                normalized_text
-            )
-
-            unique_results.append(
-                result
-            )
-
-        return unique_results
-
-    # ==================================================
-    # Cosine similarity
-    # ==================================================
-
-    def _cosine_similarity(
-        self,
-        embedding_a,
-        embedding_b
-    ):
-
-        vector_a = np.array(
-            embedding_a,
-            dtype=np.float32
-        )
-
-        vector_b = np.array(
-            embedding_b,
-            dtype=np.float32
-        )
-
-        denominator = (
-            np.linalg.norm(vector_a)
-            *
-            np.linalg.norm(vector_b)
-        )
-
-        if denominator == 0:
-            return 0.0
-
-        return float(
-            np.dot(
-                vector_a,
-                vector_b
-            )
-            /
-            denominator
-        )
-
-    # ==================================================
-    # MMR source selection
-    # ==================================================
-
-
-
-    def _select_diverse_sources(
-    self,
-    results,
-    max_sources=3,
-    diversity_lambda=0.70
-):
-        """Select the highest-ranked sources without local embeddings."""
-        if not results:
-            return []
-
-        def relevance_score(result):
-            if "hybrid_score" in result:
-                return result["hybrid_score"]
-            return result.get("similarity_score", 0.0)
-
-        ranked_results = sorted(
-            results,
-            key=relevance_score,
-            reverse=True
-        )
-
-        selected = []
-        seen_texts = set()
-
-        for result in ranked_results:
-            normalized_text = " ".join(
-                result["text"].lower().split()
-            )
+            normalized_text = self._normalize_text(text)
 
             if normalized_text in seen_texts:
                 continue
 
             seen_texts.add(normalized_text)
-            selected.append(result)
+            unique_results.append(result)
 
-            if len(selected) >= max_sources:
-                break
+        return unique_results
 
-        return selected
+    def _select_diverse_sources(self, results, max_sources=3):
+        """
+        Select the highest-ranked distinct text chunks.
 
+        Note: this removes duplicate text but does not perform
+        embedding-based maximal marginal relevance (MMR).
+        """
+        if not isinstance(max_sources, int) or max_sources < 1:
+            raise ValueError("max_sources must be a positive integer.")
 
+        ranked_results = sorted(
+            results,
+            key=lambda result: result.get("hybrid_score", 0.0),
+            reverse=True,
+        )
 
-    # ==================================================
-    # Ask question
-    # ==================================================
+        return self._remove_duplicate_sources(ranked_results)[:max_sources]
 
     def ask(
         self,
         document_id: str,
         question: str,
         session_id: str,
+        user_id: str,
         top_k: int = 5,
-        similarity_threshold: float = 0.50
+        similarity_threshold: float = 0.40,
     ):
+        # 1. Validate request inputs.
+        if not isinstance(document_id, str) or not document_id.strip():
+            raise ValueError("Document ID cannot be empty.")
 
-        # ----------------------------------------------
-        # Validate question
-        # ----------------------------------------------
+        if not isinstance(user_id, str) or not user_id.strip():
+            raise ValueError("User ID cannot be empty.")
 
-        if not question or not question.strip():
+        if not isinstance(question, str) or not question.strip():
+            raise ValueError("Question cannot be empty.")
 
+        if not isinstance(session_id, str) or not session_id.strip():
+            raise ValueError("Session ID cannot be empty.")
+
+        if (
+            not isinstance(top_k, int)
+            or isinstance(top_k, bool)
+            or top_k < 1
+        ):
+            raise ValueError("top_k must be a positive integer.")
+
+        if (
+            not isinstance(similarity_threshold, (int, float))
+            or isinstance(similarity_threshold, bool)
+            or not 0.0 <= similarity_threshold <= 1.0
+        ):
             raise ValueError(
-                "Question cannot be empty."
+                "similarity_threshold must be between 0 and 1."
             )
 
-        # ----------------------------------------------
-        # Validate session
-        # ----------------------------------------------
+        document_id = document_id.strip()
+        user_id = user_id.strip()
+        question = question.strip()
+        session_id = session_id.strip()
 
-        if not session_id or not session_id.strip():
-
-            raise ValueError(
-                "Session ID cannot be empty."
-            )
-
-        # ----------------------------------------------
-        # 1. Phase 9H:
-        #    Bind session to document
-        # ----------------------------------------------
-
-        session_matches_document = (
-            self.chat_memory.ensure_session(
-                session_id=session_id,
-                document_id=document_id
-            )
+        # 2. Verify session ownership.
+        session_matches_document = self.chat_memory.ensure_session(
+            session_id=session_id,
+            document_id=document_id,
+            user_id=user_id,
         )
 
         if not session_matches_document:
-
             raise ValueError(
-                "This chat session belongs to a "
-                "different document. Please start "
-                "a new chat session for this document."
+                "This chat session does not belong to this user "
+                "or document. Please start a new chat session."
             )
 
-        # ----------------------------------------------
-        # 2. Get conversation history
-        # ----------------------------------------------
-
+        # 3. Get conversation history.
         history = self.chat_memory.get_history(
             session_id=session_id,
-            document_id=document_id
+            document_id=document_id,
         )
 
-        print("\n--- CHAT HISTORY DEBUG ---")
-        print("Session ID:", session_id)
-        print("Document ID:", document_id)
-        print("History:", history)
-        print("--------------------------")
-
-        # ----------------------------------------------
-        # 3. Phase 9F:
-        #    Rewrite follow-up question
-        #    into standalone retrieval query
-        # ----------------------------------------------
-
-        retrieval_query = (
-            rewrite_question_for_retrieval(
-                question=question,
-                history=history
-            )
+        # 4. Rewrite follow-up questions for better retrieval.
+        retrieval_query = rewrite_question_for_retrieval(
+            question=question,
+            history=history,
         )
 
-        print(
-            "\n========================================"
-        )
+        # 5. Normalize the query.
+        normalized_query = normalize_query(retrieval_query)
 
-        print(
-            "PHASE 9F + 9I - HISTORY AWARE "
-            "HYBRID RETRIEVAL"
-        )
+        if not normalized_query:
+            raise ValueError("Search query cannot be empty.")
 
-        print(
-            "========================================"
-        )
+        # 6. Load the document's vector store.
+        vector_store = self.retriever.load_document(document_id)
 
-        print(
-            "\nOriginal question:"
-        )
-
-        print(question)
-
-        print(
-            "\nRetrieval query:"
-        )
-
-        print(retrieval_query)
-
-        # ----------------------------------------------
-        # 4. Normalize retrieval query
-        # ----------------------------------------------
-
-        normalized_query = normalize_query(
-            retrieval_query
-        )
-
-        # ----------------------------------------------
-        # 5. Load document-specific vector store
-        # ----------------------------------------------
-
-        vector_store = self.retriever.load_document(
-            document_id
-        )
-        print("\n--- STORED CHUNK ID CHECK ---")
-
-        chunk_ids = [
-            chunk.get("chunk_id")
-            for chunk in vector_store.chunks
-        ]
-
-        print("Total chunks:", len(chunk_ids))
-        print("Unique chunk IDs:", len(set(chunk_ids)))
-        print("Missing chunk IDs:", chunk_ids.count(None))
-
-        print("-----------------------------")
-        # ----------------------------------------------
-        # 6. Semantic search using Qdrant hosted inference
-        # ----------------------------------------------
-
+        # 7. Retrieve semantic and keyword candidates.
         retrieval_top_k = max(top_k * 4, 20)
 
         semantic_candidates = vector_store.search(
             query=normalized_query,
-            top_k=retrieval_top_k
+            top_k=retrieval_top_k,
         )
-
-        print("\nQdrant semantic candidates:")
-
-        for candidate in semantic_candidates:
-            print(
-                f"Page {candidate['page_number']} "
-                f"| Semantic Score: "
-                f"{candidate['similarity_score']:.4f}"
-            )
-
-        # ----------------------------------------------
-        # 8. Keyword search - BM25
-        # ----------------------------------------------
 
         keyword_candidates = self.retriever.keyword_search(
             document_id=document_id,
             query=normalized_query,
-            top_k=retrieval_top_k
+            top_k=retrieval_top_k,
         )
 
-        print("\nBM25 keyword candidates:")
-
-        for candidate in keyword_candidates:
-            print(
-                f"Page {candidate['page_number']} "
-                f"| Keyword Score: "
-                f"{candidate['keyword_score']:.4f}"
-            )
-
-                # ----------------------------------------------
-        # 9. Hybrid ranking
-        # ----------------------------------------------
-
+        # 8. Combine candidates.
         candidates = self.hybrid_retriever.combine(
             semantic_results=semantic_candidates,
             keyword_results=keyword_candidates,
-            top_k=retrieval_top_k
+            top_k=retrieval_top_k,
         )
 
-        print("\nHybrid candidates:")
-
-        for candidate in candidates:
-            print(
-                f"Page {candidate['page_number']} "
-                f"| Semantic: "
-                f"{candidate.get('semantic_score', 0.0):.4f} "
-                f"| Keyword: "
-                f"{candidate.get('keyword_score', 0.0):.4f} "
-                f"| Hybrid: "
-                f"{candidate['hybrid_score']:.4f}"
-            )
-
-        # ----------------------------------------------
-        # 10. Hybrid threshold + semantic relevance check
-        # ----------------------------------------------
-
-        hybrid_threshold = 0.40
+        # 9. Filter semantic and keyword-only results separately.
+        #
+        # The hybrid score for a keyword-only candidate is bounded
+        # by the keyword weight (0.30), so applying a 0.40 threshold
+        # to every candidate would eliminate all keyword-only matches.
         semantic_threshold = 0.25
-
-        candidates = [
-            result
-            for result in candidates
-            if (
-                result["hybrid_score"] >= hybrid_threshold
-                and result.get("semantic_score", 0.0)
-                >= semantic_threshold
-            )
-        ]
-
-        print(
-            f"\nCandidates after filtering "
-            f"(hybrid >= {hybrid_threshold}, "
-            f"semantic >= {semantic_threshold}): "
-            f"{len(candidates)}"
+        keyword_threshold = min(
+            float(similarity_threshold),
+            self.hybrid_retriever.keyword_weight * 0.5,
         )
 
-        # ----------------------------------------------
-        # No relevant information
-        # ----------------------------------------------
+        filtered_candidates = []
 
+        for result in candidates:
+            hybrid_score = result.get("hybrid_score", 0.0)
+            semantic_score = result.get("semantic_score", 0.0)
+            keyword_score = result.get("keyword_score", 0.0)
+
+            has_semantic_match = (
+                semantic_score >= semantic_threshold
+                and hybrid_score >= similarity_threshold
+            )
+
+            has_keyword_match = (
+                keyword_score > 0.0
+                and hybrid_score >= keyword_threshold
+            )
+
+            if has_semantic_match or has_keyword_match:
+                filtered_candidates.append(result)
+
+        candidates = self._remove_duplicate_sources(
+            filtered_candidates
+        )
+
+        # 10. Record the user's question before generating the answer.
+        self.chat_memory.add_message(
+            session_id=session_id,
+            role="user",
+            content=question,
+        )
+
+        # Keep the history passed to the model as the prior history.
+        # The current question is already supplied separately.
         if not candidates:
+            answer = (
+                "I couldn't find enough relevant information "
+                "in the document to answer that question."
+            )
+
+            self.chat_memory.add_message(
+                session_id=session_id,
+                role="assistant",
+                content=answer,
+            )
 
             return {
                 "document_id": document_id,
                 "question": question,
-                "answer": (
-                    "I couldn't find enough relevant "
-                    "information in the document "
-                    "to answer that question."
-                ),
-                "sources": []
+                "answer": answer,
+                "sources": [],
             }
 
-        # ----------------------------------------------
-        # 11. Remove exact duplicates
-        # ----------------------------------------------
-
-        candidates = (
-            self._remove_duplicate_sources(
-                candidates
-            )
+        # 11. Select top sources.
+        selected_sources = self._select_diverse_sources(
+            candidates,
+            max_sources=min(top_k, 3),
         )
 
-        print(
-            "\nCandidates after duplicate removal: "
-            f"{len(candidates)}"
-        )
-
-        # ----------------------------------------------
-        # 12. MMR diversity selection
-        # ----------------------------------------------
-
-        selected_sources = (
-            self._select_diverse_sources(
-                candidates,
-                max_sources=3
-            )
-        )
-
-        print(
-            "\nSelected sources:"
-        )
-
-        for source in selected_sources:
-
-            print(
-                f"Page {source['page_number']} "
-                f"| Hybrid Score: "
-                f"{source['hybrid_score']:.4f}"
-            )
-
-        # ----------------------------------------------
-        # 13. Build context
-        # ----------------------------------------------
-
+        # 12. Build context and source metadata.
         context_parts = []
-
         sources = []
 
-        for source_id, result in enumerate(
-            selected_sources,
-            start=1
-        ):
+        for source_id, result in enumerate(selected_sources, start=1):
+            page_number = result.get(
+                "page_number",
+                result.get("page", 1),
+            )
+            text = result["text"]
 
             context_parts.append(
-                f"[Source {source_id}] "
-                f"Page {result['page_number']} "
-                f"Hybrid Score: "
-                f"{result['hybrid_score']:.4f}\n"
-                f"{result['text']}"
+                f"[Source {source_id}] Page {page_number}\n{text}"
             )
 
             sources.append({
-
                 "source_id": source_id,
-
-                "page_number": (
-                    result["page_number"]
-                ),
-
-                # Keep the old field so the
-                # frontend does not break.
+                "page_number": page_number,
                 "similarity_score": round(
-                    result.get(
-                        "semantic_score",
-                        0.0
-                    ),
-                    4
+                    result.get("semantic_score", 0.0), 4
                 ),
-
-                # New Phase 9I fields
                 "keyword_score": round(
-                    result.get(
-                        "keyword_score",
-                        0.0
-                    ),
-                    4
+                    result.get("keyword_score", 0.0), 4
                 ),
-
                 "hybrid_score": round(
-                    result.get(
-                        "hybrid_score",
-                        0.0
-                    ),
-                    4
+                    result.get("hybrid_score", 0.0), 4
                 ),
-
-                "text": result["text"]
+                "text": text,
             })
 
-        context = "\n\n".join(
-            context_parts
-        )
+        context = "\n\n".join(context_parts)
 
-        # ----------------------------------------------
-        # 14. Print context for debugging
-        # ----------------------------------------------
+        # 13. Generate the document-grounded answer.
+        try:
+            answer = generate_answer_with_history(
+                question=question,
+                context=context,
+                history=history,
+            )
+        except Exception:
+            # Preserve the user's message in history but do not store
+            # a fabricated answer when the provider request fails.
+            raise
 
-        print(
-            "\nContext sent to LLM:"
-        )
-
-        print(
-            "----------------------------------------"
-        )
-
-        print(context)
-
-        print(
-            "----------------------------------------"
-        )
-
-        # ----------------------------------------------
-        # 15. Generate final answer
-        # ----------------------------------------------
-
-        answer = generate_answer_with_history(
-            question=question,
-            context=context,
-            history=history
-        )
-
-        # ----------------------------------------------
-        # 16. Save user message
-        # ----------------------------------------------
-
-        self.chat_memory.add_message(
-            session_id=session_id,
-            role="user",
-            content=question
-        )
-
-        # ----------------------------------------------
-        # 17. Save assistant answer
-        # ----------------------------------------------
-
+        # 14. Store the assistant response.
         self.chat_memory.add_message(
             session_id=session_id,
             role="assistant",
-            content=answer
+            content=answer,
         )
 
-        # ----------------------------------------------
-        # 18. Return response
-        # ----------------------------------------------
-
+        # 15. Keep the established response structure.
         return {
             "document_id": document_id,
             "question": question,
             "answer": answer,
-            "sources": sources
+            "sources": sources,
         }
+
+
+# Shared instance used by main.py and document_history.py
+rag_service = RAGService()

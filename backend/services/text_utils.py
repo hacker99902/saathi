@@ -1,10 +1,8 @@
+
 import re
 
 
-# --------------------------------------------------
 # Common AI / ML abbreviations
-# --------------------------------------------------
-
 ABBREVIATIONS = {
     "ml": "machine learning",
     "ai": "artificial intelligence",
@@ -17,92 +15,87 @@ ABBREVIATIONS = {
     "rnn": "recurrent neural network",
     "knn": "k nearest neighbors",
     "svm": "support vector machine",
-    "pca": "principal component analysis"
+    "pca": "principal component analysis",
 }
 
+_ABBREVIATION_PATTERN = re.compile(
+    r"\b(" + "|".join(
+        re.escape(item)
+        for item in sorted(ABBREVIATIONS, key=len, reverse=True)
+    ) + r")\b",
+    flags=re.IGNORECASE,
+)
 
-# --------------------------------------------------
-# Clean extracted PDF text
-# --------------------------------------------------
 
 def clean_text(text: str) -> str:
     """
-    Clean common PDF extraction problems.
-
-    This does not try to rewrite the document.
-    It only fixes whitespace and obvious formatting issues.
+    Clean common PDF extraction problems without
+    changing the document's wording.
     """
+    if not isinstance(text, str):
+        raise ValueError("text must be a string.")
 
     if not text:
         return ""
 
-    # Replace non-breaking spaces
+    # Normalize special spaces and line endings.
     text = text.replace("\xa0", " ")
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
 
-    # Remove excessive whitespace
+    # Remove trailing spaces from each line.
+    lines = [
+        re.sub(r"[ \t]+$", "", line)
+        for line in text.split("\n")
+    ]
+    text = "\n".join(lines)
+
+    # Replace repeated spaces and tabs without removing
+    # meaningful line boundaries.
     text = re.sub(r"[ \t]+", " ", text)
 
-    # Remove excessive blank lines
-    text = re.sub(r"\n\s*\n+", "\n\n", text)
+    # Normalize runs of blank lines.
+    text = re.sub(r"\n[ \t]*\n(?:[ \t]*\n)+", "\n\n", text)
 
-    # Remove spaces before punctuation
+    # Remove spaces before punctuation.
     text = re.sub(r"\s+([,.!?;:])", r"\1", text)
 
     return text.strip()
 
 
-# --------------------------------------------------
-# Normalize user query
-# --------------------------------------------------
-
 def normalize_query(query: str) -> str:
     """
-    Expand common AI/ML abbreviations in a user query.
+    Expand common AI/ML abbreviations in a query.
 
     Example:
-
         What is ML?
-        ↓
-        What is machine learning?
+        -> What is machine learning?
     """
+    if not isinstance(query, str):
+        raise ValueError("query must be a string.")
+
+    query = clean_text(query)
 
     if not query:
         return ""
 
-    query = clean_text(query)
+    def expand_abbreviation(match: re.Match) -> str:
+        return ABBREVIATIONS[match.group(0).lower()]
 
-    words = query.split()
-
-    normalized_words = []
-
-    for word in words:
-
-        # Remove punctuation temporarily
-        clean_word = re.sub(
-            r"[^\w]",
-            "",
-            word.lower()
-        )
-
-        if clean_word in ABBREVIATIONS:
-
-            replacement = ABBREVIATIONS[
-                clean_word
-            ]
-
-            # Preserve punctuation
-            punctuation = ""
-
-            if word.endswith("?"):
-                punctuation = "?"
-
-            normalized_words.append(
-                replacement + punctuation
-            )
-
-        else:
-
-            normalized_words.append(word)
+    return _ABBREVIATION_PATTERN.sub(
+        expand_abbreviation,
+        query,
+    )
 
 
-    return " ".join(normalized_words)
+if __name__ == "__main__":
+    examples = [
+        "What is ML?",
+        "Explain NLP and RAG.",
+        "What is HTML?",
+        "How does an LLM work?",
+    ]
+
+    for example in examples:
+        print(f"Original:   {example}")
+        print(f"Normalized: {normalize_query(example)}")
+        print()

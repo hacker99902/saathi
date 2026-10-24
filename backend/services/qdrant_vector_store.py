@@ -1,5 +1,7 @@
+
 import os
 import uuid
+import math
 from typing import Dict, List
 
 from qdrant_client import QdrantClient, models
@@ -13,7 +15,7 @@ _client = None
 
 
 def get_qdrant_client() -> QdrantClient:
-    """Create a Qdrant Cloud client."""
+    """Create and reuse the Qdrant Cloud client."""
     global _client
 
     if _client is None:
@@ -36,14 +38,18 @@ def get_qdrant_client() -> QdrantClient:
 
 
 class QdrantVectorStore:
-    """Qdrant Cloud storage with hosted MiniLM inference."""
+    """Store and retrieve document chunks using Qdrant Cloud inference."""
 
     def __init__(self, document_id: str):
-        self.document_id = document_id
+        if not isinstance(document_id, str) or not document_id.strip():
+            raise ValueError("document_id cannot be empty.")
+
+        self.document_id = document_id.strip()
         self.client = get_qdrant_client()
         self._ensure_collection()
 
     def _ensure_collection(self):
+        """Create the collection and required payload index if necessary."""
         if not self.client.collection_exists(COLLECTION_NAME):
             self.client.create_collection(
                 collection_name=COLLECTION_NAME,
@@ -53,44 +59,73 @@ class QdrantVectorStore:
                 ),
             )
 
-        self.client.create_payload_index(
-            collection_name=COLLECTION_NAME,
-            field_name="document_id",
-            field_schema=models.PayloadSchemaType.KEYWORD,
-            wait=True,
+        collection_info = self.client.get_collection(
+            collection_name=COLLECTION_NAME
         )
 
+        payload_schema = collection_info.payload_schema or {}
+
+        if "document_id" not in payload_schema:
+            self.client.create_payload_index(
+                collection_name=COLLECTION_NAME,
+                field_name="document_id",
+                field_schema=models.PayloadSchemaType.KEYWORD,
+                wait=True,
+            )
+
+    @staticmethod
+    def _validate_top_k(top_k: int) -> int:
+        if (
+            not isinstance(top_k, int)
+            or isinstance(top_k, bool)
+            or top_k < 1
+        ):
+            raise ValueError("top_k must be a positive integer.")
+
+        return top_k
+
     def add(self, chunks: List[Dict]):
-        """Store text chunks; Qdrant generates their embeddings."""
-        if not chunks:
-            return
+        """Store chunks with deterministic point IDs and hosted embeddings."""
+        if not isinstance(chunks, list):
+            raise ValueError("chunks must be a list.")
 
         points = []
 
         for chunk in chunks:
-            text = chunk.get("text", "").strip()
-            if not text:
+            if not isinstance(chunk, dict):
+                continue
+
+            text = chunk.get("text")
+
+            if not isinstance(text, str) or not text.strip():
                 continue
 
             chunk_id = str(
                 chunk.get("chunk_id") or uuid.uuid4()
             )
 
+            point_id = str(
+                uuid.uuid5(
+                    uuid.NAMESPACE_URL,
+                    f"{self.document_id}:{chunk_id}",
+                )
+            )
+
+            payload = {
+                **chunk,
+                "text": text.strip(),
+                "document_id": self.document_id,
+                "chunk_id": chunk_id,
+            }
+
             points.append(
                 models.PointStruct(
-                    id=str(uuid.uuid5(
-                        uuid.NAMESPACE_URL,
-                        f"{self.document_id}:{chunk_id}",
-                    )),
+                    id=point_id,
                     vector=models.Document(
-                        text=text,
+                        text=text.strip(),
                         model=MODEL_NAME,
                     ),
-                    payload={
-                        **chunk,
-                        "document_id": self.document_id,
-                        "chunk_id": chunk_id,
-                    },
+                    payload=payload,
                 )
             )
 
@@ -106,11 +141,13 @@ class QdrantVectorStore:
         query: str,
         top_k: int = 5,
     ) -> List[Dict]:
-        """Search a document using hosted query inference."""
-        if not query or not query.strip():
+        """Search only the current document using hosted inference."""
+        if not isinstance(query, str) or not query.strip():
             return []
 
-        results = self.client.query_points(
+        top_k = self._validate_top_k(top_k)
+
+        response = self.client.query_points(
             collection_name=COLLECTION_NAME,
             query=models.Document(
                 text=query.strip(),
@@ -132,14 +169,21 @@ class QdrantVectorStore:
 
         matches = []
 
-        for point in results.points:
+        for point in response.points:
             payload = dict(point.payload or {})
-            payload["similarity_score"] = float(point.score)
+
+            score = float(point.score)
+
+            if not math.isfinite(score):
+                continue
+
+            payload["similarity_score"] = score
             matches.append(payload)
 
         return matches
 
     def count(self) -> int:
+        """Count vectors belonging to this document."""
         result = self.client.count(
             collection_name=COLLECTION_NAME,
             count_filter=models.Filter(
@@ -147,67 +191,69 @@ class QdrantVectorStore:
                     models.FieldCondition(
                         key="document_id",
                         match=models.MatchValue(
-                            value=self.document_id
+                            value=self.document_id,
                         ),
                     )
                 ]
             ),
             exact=True,
         )
+
         return result.count
 
     @property
     def chunks(self) -> List[Dict]:
-        """Load all stored chunks for BM25 retrieval."""
-        response = self.client.scroll(
-            collection_name=COLLECTION_NAME,
-            scroll_filter=models.Filter(
-                must=[
-                    models.FieldCondition(
-                        key="document_id",
-                        match=models.MatchValue(
-                            value=self.document_id
-                        ),
-                    )
-                ]
-            ),
-            limit=100,
-            with_payload=True,
-            with_vectors=False,
+        """Retrieve every stored chunk for BM25 indexing."""
+        scroll_filter = models.Filter(
+            must=[
+                models.FieldCondition(
+                    key="document_id",
+                    match=models.MatchValue(
+                        value=self.document_id,
+                    ),
+                )
+            ]
         )
 
         chunks = []
+        offset = None
 
         while True:
-            points, next_offset = response
-            chunks.extend(
-                dict(point.payload or {}) for point in points
-            )
-
-            if next_offset is None:
-                break
-
             response = self.client.scroll(
                 collection_name=COLLECTION_NAME,
-                scroll_filter=models.Filter(
-                    must=[
-                        models.FieldCondition(
-                            key="document_id",
-                            match=models.MatchValue(
-                                value=self.document_id
-                            ),
-                        )
-                    ]
-                ),
-                offset=next_offset,
+                scroll_filter=scroll_filter,
+                offset=offset,
                 limit=100,
                 with_payload=True,
                 with_vectors=False,
             )
 
+            points, next_offset = response
+
+            for point in points:
+                payload = dict(point.payload or {})
+
+                # Ignore malformed records that cannot be indexed.
+                if not isinstance(payload.get("text"), str):
+                    continue
+
+                if not payload["text"].strip():
+                    continue
+
+                if not payload.get("chunk_id"):
+                    continue
+
+                chunks.append(payload)
+
+            if next_offset is None:
+                break
+
+            offset = next_offset
+
         return chunks
 
     def delete(self):
+        """Delete only vectors belonging to this document."""
         self.client.delete(
             collection_name=COLLECTION_NAME,
             points_selector=models.FilterSelector(
@@ -216,7 +262,7 @@ class QdrantVectorStore:
                         models.FieldCondition(
                             key="document_id",
                             match=models.MatchValue(
-                                value=self.document_id
+                                value=self.document_id,
                             ),
                         )
                     ]
