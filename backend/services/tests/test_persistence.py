@@ -1,4 +1,4 @@
-from .document_store import DocumentStore
+from ..document_store import DocumentStore
 
 
 # --------------------------------------------------

@@ -1,4 +1,4 @@
-from .chat_memory import ChatMemory
+from ..chat_memory import ChatMemory
 
 
 def main():
