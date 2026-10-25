@@ -1,151 +1,176 @@
-# 🧠 Saathi AI — Document Intelligence Platform
+# 🤖 Saathi AI
 
-> Upload any document. Chat, summarize, study, and listen — all powered by AI.
+### 📚 AI-Powered Document Intelligence Platform
 
-![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat&logo=node.js&logoColor=white)
-![Express](https://img.shields.io/badge/Express-4.18-000000?style=flat&logo=express)
-![Groq](https://img.shields.io/badge/Groq-LLaMA3-FF6B35?style=flat)
-![License](https://img.shields.io/badge/License-MIT-blue?style=flat)
+Saathi AI helps users upload documents and ask questions about their content. It uses Retrieval-Augmented Generation (RAG) to retrieve relevant information from documents and generate answers with supporting source information.
 
----
+## ✨ Features
 
-## What is Saathi?
+- 📄 **Document Upload and Processing** — Extracts text from uploaded PDF documents.
+- 🧩 **Intelligent Chunking** — Splits extracted text into manageable chunks and associates metadata.
+- 🔎 **Hybrid Retrieval** — Combines semantic vector retrieval with keyword-based search.
+- 💬 **Context-Aware Chat** — Uses relevant document content and conversation history to support responses.
+- 📚 **Multi-Document Chat** — Supports asking questions across selected documents.
+- 🔐 **Authentication** — Provides authentication-related API routes and request validation.
+- ☁️ **Cloud Document Storage** — Stores original PDFs in Supabase Storage.
+- 🧠 **Vector Search** — Uses Qdrant to store and retrieve document chunks and their embeddings.
+- 🧾 **Source Information** — Returns source metadata with answers.
+- 🧪 **Retrieval Evaluation** — Includes tests and evaluation utilities for retrieval behavior.
 
-Saathi is an AI-powered document intelligence platform that transforms how you interact with your documents. Upload any PDF or text file and instantly chat with it using RAG (Retrieval-Augmented Generation) technology — every answer comes with exact page citations so you always know where the information came from.
+## 🏗️ Architecture
 
----
+### RAG Question-Answering Flow
 
-## Features
+                         ┌───────────────────────────────┐
+                         │         Web Frontend          │
+                         │      HTML / CSS / JavaScript  │
+                         │ Login • Documents • Chat UI   │
+                         └───────────────┬───────────────┘
+                                         │
+                              HTTP JSON + Bearer token
+                                         │
+                                         ▼
+                         ┌───────────────────────────────┐
+                         │        FastAPI Backend        │
+                         │        backend/main.py        │
+                         │ Auth • Validation • API routes│
+                         └───────────────┬───────────────┘
+                                         │
+                                         ▼
+                         ┌───────────────────────────────┐
+                         │           RAGService          │
+                         │ Query rewrite + normalization │
+                         │ Semantic + keyword retrieval  │
+                         │ Hybrid ranking / filtering    │
+                         │ Source selection + context    │
+                         └───────────────┬───────────────┘
+                                         │
+                      ┌──────────────────┼──────────────────┐
+                      ▼                  ▼                  ▼
+              ┌────────────────┐ ┌────────────────┐ ┌────────────────┐
+              │     Qdrant     │ │ Keyword Search │ │   ChatMemory   │
+              │ Vector chunks  │ │ Retriever      │ │ Session history│
+              └────────────────┘ └────────────────┘ └────────────────┘
+                                         │
+                                         ▼
+                         ┌───────────────────────────────┐
+                         │         LLM Service           │
+                         │ Question + retrieved context  │
+                         │ + conversation history        │
+                         └───────────────┬───────────────┘
+                                         │
+                                         ▼
+                         ┌───────────────────────────────┐
+                         │ Answer + source metadata      │
+                         │ returned to the frontend      │
+                         └───────────────────────────────┘
 
-| Feature | Description |
+### PDF Indexing Flow
+
+PDF upload → text extraction → chunking + metadata → embeddings  
+→ Qdrant vector storage  
+→ original PDF in Supabase Storage  
+→ document metadata saved
+
+## 🛠️ Tech Stack
+
+| Area | Technologies |
 |---|---|
-| 💬 **Chat with Citations** | Ask anything, get answers with exact page references |
-| 📝 **Smart Summary** | Short, detailed, or bullet point summaries |
-| 🃏 **Flashcards** | Auto-generated study cards with difficulty ratings |
-| 🎙️ **Podcast Mode** | Convert your document into a 2-host audio conversation |
-| 🎓 **Exam Mode** | MCQ and short answer questions with AI evaluation |
-| ⚡ **Multi-Doc Chat** | Chat across multiple documents simultaneously |
-| 📊 **Compare Docs** | AI-powered side-by-side document comparison |
-| 🌙 **Dark / Light Mode** | Full theme switching |
+| Frontend | HTML, CSS, JavaScript |
+| Backend | Python, FastAPI, Pydantic, Uvicorn |
+| RAG | Semantic retrieval, keyword retrieval, hybrid ranking |
+| Vector Database | Qdrant |
+| File Storage | Supabase Storage |
+| Core Components | PDF processing, chunking, embeddings, chat memory |
+| Testing | Python tests and retrieval evaluation |
+
+## 🔄 How It Works
+
+### 1. Document Ingestion
+
+- A user uploads a PDF through the web interface.
+- The backend extracts the document text.
+- The text is split into chunks and enriched with metadata.
+- Embeddings are generated for semantic retrieval.
+- The chunks are indexed in Qdrant.
+- The original PDF is stored in Supabase Storage, and document metadata is saved.
+
+### 2. Question Answering
+
+- The user asks a question about a document.
+- The system normalizes and, where needed, rewrites the query.
+- Semantic and keyword retrievers find relevant chunks.
+- Hybrid ranking and filtering help select useful context.
+- The LLM service generates a response using the question and retrieved context.
+- The frontend receives the answer and source metadata.
+
+### 3. Multi-Document Chat
+
+Users can select multiple documents and ask questions across them. The backend validates document access and retrieves context from the selected documents.
+
+## 📁 Important Project Structure
+
+saathi/  
+├── backend/  
+│   ├── main.py  
+│   ├── routes/  
+│   │   ├── auth.py  
+│   │   ├── ai_features.py  
+│   │   ├── document_history.py  
+│   │   └── podcast.py  
+│   ├── services/  
+│   │   ├── rag_service.py  
+│   │   ├── rag_retriever.py  
+│   │   ├── hybrid_retriever.py  
+│   │   ├── keyword_retriever.py  
+│   │   ├── embedding_service.py  
+│   │   ├── qdrant_vector_store.py  
+│   │   ├── chunker.py  
+│   │   ├── pdf_service.py  
+│   │   ├── llm_service.py  
+│   │   ├── chat_memory.py  
+│   │   ├── document_metadata.py  
+│   │   ├── cloud_document_service.py  
+│   │   └── supabase_client.py  
+│   └── data/  
+├── frontend/  
+│   ├── index.html  
+│   ├── login.html  
+│   ├── style.css  
+│   ├── app.js  
+│   └── three/  
+├── tests/  
+│   ├── evaluate_retrieval.py  
+│   └── test_rag_evaluation.py  
+├── requirements.txt  
+├── runtime.txt  
+├── vercel.json  
+├── conftest.py  
+├── migrate_documents.py  
+└── README.md
+
+## 🔌 Main API Areas
+
+- **Authentication** — Handles authentication-related operations.
+- **AI Features** — Exposes AI feature endpoints.
+- **Document History** — Supports document history operations.
+- **Podcast** — Provides podcast-related functionality.
+- **Chat and RAG** — Accepts questions, retrieves relevant document content, and returns answers with source information.
+
+## 🔒 Security Notes
+
+- Authenticate requests where required and validate document access before processing.
+- Keep API keys and service credentials in environment configuration; do not commit secrets.
+- Configure storage permissions carefully so users can only access their authorized documents.
+
+## 🧪 Testing and Evaluation
+
+The project includes Python tests and retrieval evaluation utilities. These help check application behavior and assess whether retrieval returns relevant document content.
+
+## 🚀 Project Goal
+
+Saathi AI aims to make document understanding easier by letting users ask natural-language questions and receive context-aware answers grounded in their uploaded documents.
 
 ---
-
-## Tech Stack
-
-**Frontend**
-- Vanilla HTML, CSS, JavaScript
-- No frameworks — pure and fast
-
-**Backend**
-- Node.js + Express
-- Groq API (LLaMA3-70B)
-- pdf-parse for PDF extraction
-- bcryptjs + JWT for authentication
-- In-memory vector store for RAG
-
----
-
-## Getting Started
-
-### Prerequisites
-- Node.js 18+
-- Groq API key → [console.groq.com](https://console.groq.com) (free)
-
-### Installation
-
-```bash
-# 1. Clone the repo
-git clone https://github.com/satishnm0204/saathi.git
-cd saathi/backend
-
-# 2. Install dependencies
-npm install
-
-# 3. Create your .env file
-.env #add the GROQ_API_KEY ,JWT_SECRET
-```
-
-### Configure .env
-
-```env
-GROQ_API_KEY=gsk_your_key_here
-JWT_SECRET=your_random_secret_here
-PORT=3001
-NODE_ENV=development
-```
-
-### Run
-
-```bash
-npm run dev
-```
-
-Open → `http://localhost:3001`
-
----
-
-## Project Structure
-
-```
-saathi/
-├── frontend/
-│   ├── index.html        # Main app
-│   ├── login.html        # Auth page
-│   ├── style.css         # Design system
-│   └── app.js            # App logic
-│
-└── backend/
-    ├── server.js         # Entry point
-    ├── routes/           # API endpoints
-    ├── services/         # Groq AI + document processing
-    ├── middleware/       # JWT auth guard
-    ├── utils/            # Chunker, store, user store
-    └── vectorStore/      # In-memory RAG store
-```
-
----
-
-## How RAG Works in Saathi
-
-```
-Upload PDF
-    ↓
-Extract text (pdf-parse)
-    ↓
-Split into chunks (13 chunks for a 5-page doc)
-    ↓
-Generate embeddings (TF-IDF + FNV-1a hash)
-    ↓
-Store in memory
-
-User asks a question
-    ↓
-Embed the query
-    ↓
-Find top matching chunks (cosine similarity)
-    ↓
-Send chunks + question to LLaMA3-70B
-    ↓
-Answer with page citations
-```
-
----
-
-## Security
-
-- Passwords hashed with **bcrypt** (10 rounds)
-- **JWT tokens** — 7 day expiry, verified on every request
-- Rate limiting on login — 10 attempts per 15 minutes
-- All routes protected except `/api/auth/*`
-- `.env` keys never exposed to frontend
-
----
-
-## Screenshots
-
-> Chat with citations, flashcards with difficulty ratings, smart summaries, podcast mode
-
----
-
 
 *Saathi means "companion" in Hindi.*
